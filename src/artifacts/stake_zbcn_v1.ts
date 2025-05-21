@@ -1,11 +1,13 @@
 /**
  * Program IDL in camelCase format in order to be used in JS/TS.
  *
+ * Note that this is only a type helper and is not the actual IDL. The original
+ * IDL can be found at `target/idl/zebec_stake.json`.
  */
-export type StakeZbcn = {
+export type ZebecStake = {
 	address: "6S5tbu8jPJKFvpBMjaMPQbcwcrw8iHcuGnXH8ZwHgwaE";
 	metadata: {
-		name: "stakeZbcn";
+		name: "zebecStake";
 		version: "0.1.0";
 		spec: "0.1.0";
 		description: "Created with Anchor";
@@ -44,6 +46,22 @@ export type StakeZbcn = {
 							{
 								kind: "const";
 								value: [115, 116, 97, 107, 101, 95, 118, 97, 117, 108, 116];
+							},
+							{
+								kind: "account";
+								path: "lockup";
+							},
+						];
+					};
+				},
+				{
+					name: "rewardVault";
+					writable: true;
+					pda: {
+						seeds: [
+							{
+								kind: "const";
+								value: [114, 101, 119, 97, 114, 100, 95, 118, 97, 117, 108, 116];
 							},
 							{
 								kind: "account";
@@ -616,6 +634,22 @@ export type StakeZbcn = {
 					};
 				},
 				{
+					name: "rewardVault";
+					writable: true;
+					pda: {
+						seeds: [
+							{
+								kind: "const";
+								value: [114, 101, 119, 97, 114, 100, 95, 118, 97, 117, 108, 116];
+							},
+							{
+								kind: "account";
+								path: "lockup";
+							},
+						];
+					};
+				},
+				{
 					name: "stakeVaultTokenAccount";
 					writable: true;
 					pda: {
@@ -706,13 +740,13 @@ export type StakeZbcn = {
 					};
 				},
 				{
-					name: "stakeVaultRewardTokenAccount";
+					name: "rewardVaultTokenAccount";
 					writable: true;
 					pda: {
 						seeds: [
 							{
 								kind: "account";
-								path: "stakeVault";
+								path: "rewardVault";
 							},
 							{
 								kind: "const";
@@ -979,10 +1013,6 @@ export type StakeZbcn = {
 						type: "string";
 					},
 					{
-						name: "lockPeriod";
-						type: "i64";
-					},
-					{
 						name: "fee";
 						type: "u64";
 					},
@@ -1171,6 +1201,11 @@ export type StakeZbcn = {
 			name: "lockup";
 			type: "string";
 			value: '"zebec_lockup"';
+		},
+		{
+			name: "rewardVault";
+			type: "string";
+			value: '"reward_vault"';
 		},
 		{
 			name: "stakeVault";
