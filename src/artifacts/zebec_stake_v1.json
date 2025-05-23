@@ -1,5 +1,5 @@
 {
-	"address": "6S5tbu8jPJKFvpBMjaMPQbcwcrw8iHcuGnXH8ZwHgwaE",
+	"address": "5CoJpJmTtEgMLUYtabhbKD9fxHRETbCpgYyKYjELG38E",
 	"metadata": {
 		"name": "zebec_stake",
 		"version": "0.1.0",
@@ -300,7 +300,7 @@
 							},
 							{
 								"kind": "arg",
-								"path": "nonce"
+								"path": "_nonce"
 							}
 						]
 					}
@@ -516,6 +516,76 @@
 					"type": "u64"
 				}
 			]
+		},
+		{
+			"name": "whitelist_staker",
+			"discriminator": [13, 211, 22, 179, 35, 177, 63, 155],
+			"accounts": [
+				{
+					"name": "admin",
+					"writable": true,
+					"signer": true
+				},
+				{
+					"name": "lockup"
+				},
+				{
+					"name": "user_nonce",
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "account",
+								"path": "staker"
+							},
+							{
+								"kind": "account",
+								"path": "lockup"
+							}
+						]
+					}
+				},
+				{
+					"name": "staker"
+				},
+				{
+					"name": "user_pda",
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "account",
+								"path": "staker"
+							},
+							{
+								"kind": "account",
+								"path": "lockup"
+							},
+							{
+								"kind": "arg",
+								"path": "args.nonce"
+							}
+						]
+					}
+				},
+				{
+					"name": "stake_token"
+				},
+				{
+					"name": "system_program",
+					"address": "11111111111111111111111111111111"
+				}
+			],
+			"args": [
+				{
+					"name": "params",
+					"type": {
+						"defined": {
+							"name": "WhitelistStakerParams"
+						}
+					}
+				}
+			]
 		}
 	],
 	"accounts": [
@@ -535,13 +605,58 @@
 	"errors": [
 		{
 			"code": 6000,
-			"name": "StakeAlreadyClaimed",
-			"msg": "Stake Already Claimed"
+			"name": "InvalidTime",
+			"msg": "Invalid time"
 		},
 		{
 			"code": 6001,
-			"name": "StakeNotClaimable",
-			"msg": "Stake Not Claimable"
+			"name": "InvalidStakeToken",
+			"msg": "Invalid stake token"
+		},
+		{
+			"code": 6002,
+			"name": "InvalidRewardToken",
+			"msg": "Invalid reward token"
+		},
+		{
+			"code": 6003,
+			"name": "InvalidStakePeriod",
+			"msg": "Invalid stake Period"
+		},
+		{
+			"code": 6004,
+			"name": "InvalidStaker",
+			"msg": "Invalid staker"
+		},
+		{
+			"code": 6005,
+			"name": "InvaildNonce",
+			"msg": "Invalid nonce"
+		},
+		{
+			"code": 6006,
+			"name": "UnAuthorized",
+			"msg": "UnAuthorized"
+		},
+		{
+			"code": 6007,
+			"name": "InvalidLockPeriod"
+		},
+		{
+			"code": 6008,
+			"name": "InvalidAmount"
+		},
+		{
+			"code": 6009,
+			"name": "RewardAlreadyClaimed"
+		},
+		{
+			"code": 6010,
+			"name": "StakeRewardNotClaimable"
+		},
+		{
+			"code": 6011,
+			"name": "RewardIsZero"
 		}
 	],
 	"types": [
@@ -743,10 +858,6 @@
 						"type": "u64"
 					},
 					{
-						"name": "staker",
-						"type": "pubkey"
-					},
-					{
 						"name": "created_time",
 						"type": "i64"
 					},
@@ -764,6 +875,30 @@
 					},
 					{
 						"name": "lock_period",
+						"type": "i64"
+					}
+				]
+			}
+		},
+		{
+			"name": "WhitelistStakerParams",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "amount",
+						"type": "u64"
+					},
+					{
+						"name": "nonce",
+						"type": "u64"
+					},
+					{
+						"name": "lock_period",
+						"type": "i64"
+					},
+					{
+						"name": "created_time",
 						"type": "i64"
 					}
 				]

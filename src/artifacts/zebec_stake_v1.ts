@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/zebec_stake.json`.
  */
 export type ZebecStake = {
-	address: "6S5tbu8jPJKFvpBMjaMPQbcwcrw8iHcuGnXH8ZwHgwaE";
+	address: "5CoJpJmTtEgMLUYtabhbKD9fxHRETbCpgYyKYjELG38E";
 	metadata: {
 		name: "zebecStake";
 		version: "0.1.0";
@@ -943,6 +943,76 @@ export type ZebecStake = {
 				},
 			];
 		},
+		{
+			name: "whitelistStaker";
+			discriminator: [13, 211, 22, 179, 35, 177, 63, 155];
+			accounts: [
+				{
+					name: "admin";
+					writable: true;
+					signer: true;
+				},
+				{
+					name: "lockup";
+				},
+				{
+					name: "userNonce";
+					writable: true;
+					pda: {
+						seeds: [
+							{
+								kind: "account";
+								path: "staker";
+							},
+							{
+								kind: "account";
+								path: "lockup";
+							},
+						];
+					};
+				},
+				{
+					name: "staker";
+				},
+				{
+					name: "userPda";
+					writable: true;
+					pda: {
+						seeds: [
+							{
+								kind: "account";
+								path: "staker";
+							},
+							{
+								kind: "account";
+								path: "lockup";
+							},
+							{
+								kind: "arg";
+								path: "args.nonce";
+							},
+						];
+					};
+				},
+				{
+					name: "stakeToken";
+				},
+				{
+					name: "systemProgram";
+					address: "11111111111111111111111111111111";
+				},
+			];
+			args: [
+				{
+					name: "params";
+					type: {
+						defined: {
+							name: "whitelistStakerParams";
+						};
+					};
+				},
+			];
+		},
 	];
 	accounts: [
 		{
@@ -961,13 +1031,58 @@ export type ZebecStake = {
 	errors: [
 		{
 			code: 6000;
-			name: "stakeAlreadyClaimed";
-			msg: "Stake Already Claimed";
+			name: "invalidTime";
+			msg: "Invalid time";
 		},
 		{
 			code: 6001;
-			name: "stakeNotClaimable";
-			msg: "Stake Not Claimable";
+			name: "invalidStakeToken";
+			msg: "Invalid stake token";
+		},
+		{
+			code: 6002;
+			name: "invalidRewardToken";
+			msg: "Invalid reward token";
+		},
+		{
+			code: 6003;
+			name: "invalidStakePeriod";
+			msg: "Invalid stake Period";
+		},
+		{
+			code: 6004;
+			name: "invalidStaker";
+			msg: "Invalid staker";
+		},
+		{
+			code: 6005;
+			name: "invaildNonce";
+			msg: "Invalid nonce";
+		},
+		{
+			code: 6006;
+			name: "unAuthorized";
+			msg: "unAuthorized";
+		},
+		{
+			code: 6007;
+			name: "invalidLockPeriod";
+		},
+		{
+			code: 6008;
+			name: "invalidAmount";
+		},
+		{
+			code: 6009;
+			name: "rewardAlreadyClaimed";
+		},
+		{
+			code: 6010;
+			name: "stakeRewardNotClaimable";
+		},
+		{
+			code: 6011;
+			name: "rewardIsZero";
 		},
 	];
 	types: [
@@ -1169,10 +1284,6 @@ export type ZebecStake = {
 						type: "u64";
 					},
 					{
-						name: "staker";
-						type: "pubkey";
-					},
-					{
 						name: "createdTime";
 						type: "i64";
 					},
@@ -1190,6 +1301,30 @@ export type ZebecStake = {
 					},
 					{
 						name: "lockPeriod";
+						type: "i64";
+					},
+				];
+			};
+		},
+		{
+			name: "whitelistStakerParams";
+			type: {
+				kind: "struct";
+				fields: [
+					{
+						name: "amount";
+						type: "u64";
+					},
+					{
+						name: "nonce";
+						type: "u64";
+					},
+					{
+						name: "lockPeriod";
+						type: "i64";
+					},
+					{
+						name: "createdTime";
 						type: "i64";
 					},
 				];
