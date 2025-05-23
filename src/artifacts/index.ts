@@ -1,6 +1,6 @@
-import { StakeZbcn as StakeIdlV1 } from "./stake_zbcn_v1";
-import stake_idl_v1 from "./stake_zbcn_v1.json";
+import { ZebecStake as ZebecStakeIdlV1 } from "./zebec_stake_v1";
+import zebec_stake_idl_v1 from "./zebec_stake_v1.json";
 
-const STAKE_IDL_V1 = stake_idl_v1 as StakeIdlV1;
+const ZEBEC_STAKE_IDL_V1 = zebec_stake_idl_v1 as ZebecStakeIdlV1;
 
-export { STAKE_IDL_V1, StakeIdlV1 };
+export { ZEBEC_STAKE_IDL_V1, ZebecStakeIdlV1 };
