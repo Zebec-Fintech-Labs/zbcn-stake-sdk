@@ -1,3 +1,5 @@
+import { BigNumber } from "bignumber.js";
+
 import { Address, AnchorProvider, BN, Program, Provider, translateAddress } from "@coral-xyz/anchor";
 import {
 	AddressLookupTableAccount,
@@ -7,19 +9,21 @@ import {
 	Signer,
 	TransactionInstruction,
 } from "@solana/web3.js";
+import { getMintDecimals, SignTransactionFunction, TransactionPayload } from "@zebec-network/solana-common";
 
-import { STAKE_IDL_V1, StakeIdlV1 } from "./artifacts";
-import { SignTransactionFunction, TransactionPayload } from "./payload";
+import { ZEBEC_STAKE_IDL_V1, ZebecStakeIdlV1 } from "./artifacts";
+import { TEN_BIGNUM } from "./constants";
+import { deriveLockupAddress, deriveRewardVaultAddress, deriveStakeVaultAddress } from "./pda";
 import { createReadonlyProvider, ReadonlyProvider } from "./providers";
 
-type ProgramCreateFunction = (provider: ReadonlyProvider | AnchorProvider) => Program<StakeIdlV1>;
+type ProgramCreateFunction = (provider: ReadonlyProvider | AnchorProvider) => Program<ZebecStakeIdlV1>;
 
 /**
  * StakeServiceBuilder is a builder class for creating a StakeService instance.
  * It allows you to set the network, provider, and program to use.
  */
 export class StakeServiceBuilder {
-	private _program: Program<StakeIdlV1> | undefined;
+	private _program: Program<ZebecStakeIdlV1> | undefined;
 	private _provider: ReadonlyProvider | AnchorProvider | undefined;
 	private _network: "mainnet-beta" | "devnet" | undefined;
 
@@ -74,13 +78,9 @@ export class StakeServiceBuilder {
 			? "devnet"
 			: rpcEndpoint.includes("testnet")
 				? "testnet"
-				: "mainnet-beta";
-
-		if (connNetwork === "testnet") {
-			throw new Error(
-				"InvalidOperation: Testnet is not supported. Please use connection with devnet or mainnet-beta network.",
-			);
-		}
+				: rpcEndpoint.includes("localhost:8899")
+					? "localnet"
+					: "mainnet-beta";
 
 		if (network !== connNetwork) {
 			throw new Error(
@@ -107,7 +107,7 @@ export class StakeServiceBuilder {
 			throw new Error("InvalidOperation: Provider is not set. Please set the provider before setting the program.");
 		}
 
-		this._program = !createProgram ? new Program(STAKE_IDL_V1, this._provider) : createProgram(this._provider);
+		this._program = !createProgram ? new Program(ZEBEC_STAKE_IDL_V1, this._provider) : createProgram(this._provider);
 
 		return this;
 	}
@@ -132,7 +132,7 @@ export class StakeServiceBuilder {
 export class StakeService {
 	constructor(
 		readonly provider: Provider,
-		readonly stakeProgram: Program<StakeIdlV1>,
+		readonly program: Program<ZebecStakeIdlV1>,
 		readonly network: "mainnet-beta" | "devnet",
 	) {}
 
@@ -143,7 +143,7 @@ export class StakeService {
 		addressLookupTableAccounts?: AddressLookupTableAccount[],
 	): Promise<TransactionPayload> {
 		const errorMap: Map<number, string> = new Map();
-		this.stakeProgram.idl.errors.forEach((error) => errorMap.set(error.code, error.msg));
+		this.program.idl.errors.forEach((error) => errorMap.set(error.code, error.msg));
 
 		let signTransaction: SignTransactionFunction | undefined = undefined;
 
@@ -168,14 +168,40 @@ export class StakeService {
 
 	async getInitLockupInstruction(
 		creator: PublicKey,
+		lockup: PublicKey,
 		stakeToken: PublicKey,
 		rewardToken: PublicKey,
+		rewardVault: PublicKey,
+		stakeVault: PublicKey,
+		data: InitLockupInstructionData,
 	): Promise<TransactionInstruction> {
-		return this.stakeProgram.methods.initLockup().accounts({ rewardToken, stakeToken, creator }).instruction();
+		return this.program.methods
+			.initLockup({
+				fee: data.fee,
+				durationMap: data.rewardSchemes,
+				feeVault: data.feeVault,
+				name: data.name,
+			})
+			.accountsPartial({
+				// associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+				creator,
+				lockup,
+				rewardToken,
+				rewardVault,
+				stakeToken,
+				stakeVault,
+				// systemProgram: SystemProgram.programId,
+				// tokenProgram: TOKEN_PROGRAM_ID
+			})
+			.instruction();
 	}
 
-	async getStakeInstruction(stakeToken: PublicKey, staker: PublicKey): Promise<TransactionInstruction> {
-		return this.stakeProgram.methods.stakeZbcn().accounts({ stakeToken, staker }).instruction();
+	async getStakeInstruction(
+		stakeToken: PublicKey,
+		staker: PublicKey,
+		data: StakeInstructionData,
+	): Promise<TransactionInstruction> {
+		return this.program.methods.stakeZbcn(data).accounts({ stakeToken, staker }).instruction();
 	}
 
 	async getUnstakeInstruction(
@@ -185,45 +211,286 @@ export class StakeService {
 		staker: PublicKey,
 		nonce: BN,
 	): Promise<TransactionInstruction> {
-		return this.stakeProgram.methods
+		return this.program.methods
 			.unstakeZbcn(nonce)
 			.accounts({ feeVault, rewardToken, stakeToken, staker })
 			.instruction();
 	}
 
-	async initLockup(creator: Address, stakeToken: Address, rewardToken: Address): Promise<TransactionPayload> {
-		const creatorKey = translateAddress(creator);
-		const stakeTokenKey = translateAddress(stakeToken);
-		const rewardTokenKey = translateAddress(rewardToken);
+	async initLockup(params: {
+		stakeToken: Address;
+		rewardToken: Address;
+		creator?: Address;
+		name: string;
+		fee: Numeric;
+		feeVault: Address;
+		rewardSchemes: RewardScheme[];
+	}): Promise<TransactionPayload> {
+		const creator = params.creator ? translateAddress(params.creator) : this.provider.publicKey;
 
-		const instruction = await this.getInitLockupInstruction(creatorKey, stakeTokenKey, rewardTokenKey);
+		if (!creator) {
+			throw new Error("MissingArgument: Please provide either creator address or publicKey in provider");
+		}
+		const stakeToken = translateAddress(params.stakeToken);
+		const rewardToken = translateAddress(params.rewardToken);
+		const feeVault = translateAddress(params.feeVault);
 
-		return this._createPayload(creatorKey, [instruction]);
+		const stakeTokenDecimals = await getMintDecimals(this.provider.connection, stakeToken);
+		const rewardTokenDecimals = await getMintDecimals(this.provider.connection, rewardToken);
+
+		const rewardSchemes = params.rewardSchemes.map<ParsedRewardScheme>((value) => {
+			return {
+				duration: new BN(value.duration),
+				reward: new BN(BigNumber(value.reward).times(TEN_BIGNUM.pow(rewardTokenDecimals)).toFixed()),
+			};
+		});
+
+		const lockup = deriveLockupAddress(params.name, this.program.programId);
+		const rewardVault = deriveRewardVaultAddress(lockup, this.program.programId);
+		const stakeVault = deriveStakeVaultAddress(lockup, this.program.programId);
+
+		const fee = new BN(BigNumber(params.fee).times(TEN_BIGNUM.pow(stakeTokenDecimals)).toFixed());
+		const instruction = await this.getInitLockupInstruction(
+			creator,
+			lockup,
+			stakeToken,
+			rewardToken,
+			rewardVault,
+			stakeVault,
+			{
+				fee,
+				feeVault: feeVault,
+				name: params.name,
+				rewardSchemes,
+			},
+		);
+
+		return this._createPayload(creator, [instruction]);
 	}
 
-	async stake(staker?: Address): Promise<TransactionPayload> {
-		const stakerKey = staker ? translateAddress(staker) : this.provider.publicKey;
+	async stake(params: {
+		lockupName: string;
+		staker?: Address;
+		amount: Numeric;
+		lockPeriod: number;
+		nonce: bigint;
+	}): Promise<TransactionPayload> {
+		const staker = params.staker ? translateAddress(params.staker) : this.provider.publicKey;
 
-		if (!stakerKey) {
+		if (!staker) {
 			throw new Error("MissingArgument: Please provide either staker address or publicKey in provider");
 		}
 
-		const instruction = await this.getStakeInstruction(stakerKey, stakerKey); // todo: add stakeToken
+		const lockupAddress = deriveLockupAddress(params.lockupName, this.program.programId);
 
-		return this._createPayload(stakerKey, [instruction]);
+		const lockupAccount = await this.program.account.lockup.fetchNullable(
+			lockupAddress,
+			this.provider.connection.commitment,
+		);
+
+		if (!lockupAccount) {
+			throw new Error("Lockup account does not exists for address: " + lockupAddress);
+		}
+
+		const stakeToken = lockupAccount.stakedToken.tokenAddress;
+
+		const stakeTokenDecimals = await getMintDecimals(this.provider.connection, stakeToken);
+
+		const UNITS_PER_STAKE_TOKEN = TEN_BIGNUM.pow(stakeTokenDecimals);
+
+		const instruction = await this.getStakeInstruction(stakeToken, staker, {
+			amount: new BN(BigNumber(params.amount).times(UNITS_PER_STAKE_TOKEN).toFixed(0)),
+			lockPeriod: new BN(params.lockPeriod),
+			nonce: new BN(params.nonce.toString()),
+		});
+
+		return this._createPayload(staker, [instruction]);
 	}
 
-	async unstake(nonce: bigint, staker?: Address): Promise<TransactionPayload> {
-		const stakerKey = staker ? translateAddress(staker) : this.provider.publicKey;
+	async unstake(params: { lockupName: string; nonce: bigint; staker?: Address }): Promise<TransactionPayload> {
+		const staker = params.staker ? translateAddress(params.staker) : this.provider.publicKey;
 
-		if (!stakerKey) {
+		if (!staker) {
 			throw new Error("MissingArgument: Please provide either staker address or publicKey in provider");
 		}
 
-		console.log("nonce:", nonce);
+		const lockupAddress = deriveLockupAddress(params.lockupName, this.program.programId);
 
-		const instruction = await this.getUnstakeInstruction(stakerKey, stakerKey, stakerKey, stakerKey, new BN(0)); // todo: add feeVault and rewardToken
+		const lockupAccount = await this.program.account.lockup.fetchNullable(
+			lockupAddress,
+			this.provider.connection.commitment,
+		);
 
-		return this._createPayload(stakerKey, [instruction]);
+		if (!lockupAccount) {
+			throw new Error("Lockup account does not exists for address: " + lockupAddress);
+		}
+
+		const stakeToken = lockupAccount.stakedToken.tokenAddress;
+		const rewardToken = lockupAccount.rewardToken.tokenAddress;
+		const feeVault = lockupAccount.feeInfo.feeVault;
+
+		const instruction = await this.getUnstakeInstruction(
+			feeVault,
+			rewardToken,
+			stakeToken,
+			staker,
+			new BN(params.nonce.toString()),
+		);
+
+		return this._createPayload(staker, [instruction]);
+	}
+
+	async getLockupInfo(lockupAddress: Address): Promise<LockupInfo> {
+		const lockupAccount = await this.program.account.lockup.fetchNullable(
+			lockupAddress,
+			this.provider.connection.commitment,
+		);
+
+		if (!lockupAccount) {
+			throw new Error("Lockup account does not exists for address: " + lockupAddress);
+		}
+
+		const stakeTokenAddress = lockupAccount.stakedToken.tokenAddress;
+		const rewardTokenAddress = lockupAccount.rewardToken.tokenAddress;
+
+		const stakeTokenDecimals = await getMintDecimals(this.provider.connection, stakeTokenAddress);
+		const rewardTokenDecimals = await getMintDecimals(this.provider.connection, rewardTokenAddress);
+
+		const UNITS_PER_STAKE_TOKEN = TEN_BIGNUM.pow(stakeTokenDecimals);
+		const UNITS_PER_REWARD_TOKEN = TEN_BIGNUM.pow(rewardTokenDecimals);
+
+		return {
+			feeInfo: {
+				fee: BigNumber(lockupAccount.feeInfo.fee.toString()).div(UNITS_PER_STAKE_TOKEN).toFixed(),
+				feeVault: lockupAccount.feeInfo.feeVault.toString(),
+			},
+			rewardToken: {
+				tokenAddress: lockupAccount.rewardToken.tokenAddress.toString(),
+			},
+			stakeToken: {
+				tokenAdress: lockupAccount.stakedToken.tokenAddress.toString(),
+				totalStaked: BigNumber(lockupAccount.stakedToken.totalStaked.toString()).div(UNITS_PER_STAKE_TOKEN).toFixed(),
+			},
+			stakeInfo: {
+				name: lockupAccount.stakeInfo.name,
+				creator: lockupAccount.stakeInfo.creator.toString(),
+				rewardSchemes: lockupAccount.stakeInfo.durationMap.map<RewardScheme>((value) => ({
+					duration: value.duration.toNumber(),
+					reward: BigNumber(value.reward.toString()).div(UNITS_PER_REWARD_TOKEN).toFixed(),
+				})),
+			},
+		};
+	}
+
+	async getStakeInfo(lockupAddress: Address, stakeAddress: Address): Promise<StakeInfo> {
+		const lockupAccount = await this.program.account.lockup.fetchNullable(
+			lockupAddress,
+			this.provider.connection.commitment,
+		);
+
+		if (!lockupAccount) {
+			throw new Error("Lockup account does not exists for address: " + lockupAddress);
+		}
+
+		const stakeTokenAddress = lockupAccount.stakedToken.tokenAddress;
+		const rewardTokenAddress = lockupAccount.rewardToken.tokenAddress;
+
+		const stakeTokenDecimals = await getMintDecimals(this.provider.connection, stakeTokenAddress);
+		const rewardTokenDecimals = await getMintDecimals(this.provider.connection, rewardTokenAddress);
+
+		const UNITS_PER_STAKE_TOKEN = TEN_BIGNUM.pow(stakeTokenDecimals);
+		const UNITS_PER_REWARD_TOKEN = TEN_BIGNUM.pow(rewardTokenDecimals);
+
+		const stakeAccount = await this.program.account.userStakeData.fetchNullable(
+			stakeAddress,
+			this.provider.connection.commitment,
+		);
+
+		if (!stakeAccount) {
+			throw new Error("Stake account does not exists for address: " + stakeAddress);
+		}
+
+		return {
+			nonce: BigInt(stakeAccount.nonce.toString()),
+			staker: stakeAccount.staker.toString(),
+			createdTime: stakeAccount.createdTime.toNumber(),
+			stakedAmount: BigNumber(stakeAccount.stakedAmount.toString()).div(UNITS_PER_STAKE_TOKEN).toFixed(),
+			rewardAmount: BigNumber(stakeAccount.rewardAmount.toString()).div(UNITS_PER_REWARD_TOKEN).toFixed(),
+			stakeClaimed: stakeAccount.stakeClaimed,
+			lockPeriod: stakeAccount.lockPeriod.toNumber(),
+		};
+	}
+
+	async getUserNonceInfo(userNonceAddress: Address): Promise<UserNonceInfo> {
+		const userNonceAccount = await this.program.account.userNonce.fetchNullable(
+			userNonceAddress,
+			this.provider.connection.commitment,
+		);
+
+		if (!userNonceAccount) {
+			throw new Error("User nonce account does not exists for address: " + userNonceAddress);
+		}
+
+		return {
+			nonce: BigInt(userNonceAccount.nonce.toString()),
+		};
 	}
 }
+
+export type InitLockupInstructionData = {
+	rewardSchemes: ParsedRewardScheme[];
+	fee: BN;
+	feeVault: PublicKey;
+	name: string;
+};
+
+export type ParsedRewardScheme = {
+	duration: BN;
+	reward: BN;
+};
+
+type Numeric = string | number;
+
+export type RewardScheme = {
+	duration: number;
+	reward: Numeric;
+};
+
+export type StakeInstructionData = {
+	amount: BN;
+	lockPeriod: BN;
+	nonce: BN;
+};
+
+export type LockupInfo = {
+	feeInfo: {
+		fee: string;
+		feeVault: string;
+	};
+	rewardToken: {
+		tokenAddress: string;
+	};
+	stakeToken: {
+		tokenAdress: string;
+		totalStaked: string;
+	};
+	stakeInfo: {
+		name: string;
+		creator: string;
+		rewardSchemes: RewardScheme[];
+	};
+};
+
+export type StakeInfo = {
+	nonce: bigint;
+	staker: string;
+	createdTime: number;
+	stakedAmount: string;
+	rewardAmount: string;
+	stakeClaimed: boolean;
+	lockPeriod: number;
+};
+
+export type UserNonceInfo = {
+	nonce: bigint;
+};
