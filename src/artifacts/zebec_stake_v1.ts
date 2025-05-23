@@ -127,7 +127,7 @@ export type ZebecStake = {
 					};
 				},
 				{
-					name: "userPda";
+					name: "stakePda";
 					writable: true;
 					pda: {
 						seeds: [
@@ -975,7 +975,7 @@ export type ZebecStake = {
 					name: "staker";
 				},
 				{
-					name: "userPda";
+					name: "stakePda";
 					writable: true;
 					pda: {
 						seeds: [
