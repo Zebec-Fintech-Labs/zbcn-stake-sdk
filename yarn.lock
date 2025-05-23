@@ -221,6 +221,13 @@
   dependencies:
     "@types/node" "*"
 
+"@zebec-network/core-utils@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@zebec-network/core-utils/-/core-utils-1.0.4.tgz#e07562824eaaa8769e4a39a7130b65dd5f35f632"
+  integrity sha512-K5uwuyYbK2OYQMdRGn74U5Y6v1q1hSORwk90e1Yc6rzz1W+ciiCISPvnoOUaS0QfC/d86NAuhU837q4bE/NXEQ==
+  dependencies:
+    bignumber.js "^9.3.0"
+
 "@zebec-network/solana-common@^1.2.6":
   version "1.2.6"
   resolved "https://registry.yarnpkg.com/@zebec-network/solana-common/-/solana-common-1.2.6.tgz#05f0b9cecb86e2c98ce37e6677412352f935a4f5"
