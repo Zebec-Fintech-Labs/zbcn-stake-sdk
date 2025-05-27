@@ -2,7 +2,7 @@ import assert from "assert";
 
 import { Program } from "@coral-xyz/anchor";
 
-import { STAKE_IDL_V1, StakeService, StakeServiceBuilder } from "../src";
+import { StakeService, StakeServiceBuilder, ZEBEC_STAKE_IDL_V1 } from "../src";
 import { createAnchorProvider, createReadonlyProvider } from "../src/providers";
 import { getConnection, getWallets } from "./shared";
 
@@ -28,7 +28,7 @@ describe("Stake service builder test", () => {
 			const service = new StakeServiceBuilder()
 				.setNetwork(network)
 				.setProvider(createReadonlyProvider(connection, wallet.publicKey))
-				.setProgram((provider) => new Program(STAKE_IDL_V1, provider))
+				.setProgram((provider) => new Program(ZEBEC_STAKE_IDL_V1, provider))
 				.build();
 
 			assert(service instanceof StakeService, "Service is not instance of StakeService");
@@ -43,7 +43,7 @@ describe("Stake service builder test", () => {
 			const service = new StakeServiceBuilder()
 				.setNetwork(network)
 				.setProvider(createAnchorProvider(connection, wallet, { commitment: "confirmed" }))
-				.setProgram((provider) => new Program(STAKE_IDL_V1, provider))
+				.setProgram((provider) => new Program(ZEBEC_STAKE_IDL_V1, provider))
 				.build();
 
 			assert(service instanceof StakeService, "Service is not instance of StakeService");
@@ -90,7 +90,7 @@ describe("Stake service builder test", () => {
 			new StakeServiceBuilder()
 				.setNetwork()
 				.setProvider()
-				.setProgram((provider) => new Program(STAKE_IDL_V1, provider))
+				.setProgram((provider) => new Program(ZEBEC_STAKE_IDL_V1, provider))
 				.setProgram()
 				.build();
 

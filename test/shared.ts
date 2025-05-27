@@ -16,8 +16,8 @@ export function getConnection(cluster?: Cluster) {
 	return new Connection(clusterApiUrl(cluster));
 }
 
-export function sleep(ms: number) {
-	return new Promise((r) => setTimeout(r, ms));
+export async function sleep(ms: number) {
+	return await new Promise((r) => setTimeout(r, ms));
 }
 
 export function getWallets(cluster?: Cluster) {
@@ -71,4 +71,13 @@ export function getTxUrl(tx: string, cluster: Cluster = "mainnet-beta") {
 	}
 
 	return "https://solscan.io/tx/" + tx + "?cluster=" + cluster;
+}
+
+export function chunkArray<T>(arr: T[], size: number): T[][] {
+	const result: T[][] = [];
+	for (let i = 0; i < arr.length; i += size) {
+		result.push(arr.slice(i, i + size));
+	}
+
+	return result;
 }

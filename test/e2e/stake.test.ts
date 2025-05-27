@@ -1,5 +1,5 @@
 import { StakeServiceBuilder } from "../../src";
-import { deriveUserNonceAddress } from "../../src/pda";
+import { deriveLockupAddress, deriveUserNonceAddress } from "../../src/pda";
 import { createAnchorProvider } from "../../src/providers";
 import { getConnection, getWallets } from "../shared";
 
@@ -15,11 +15,13 @@ describe("Stake", () => {
 	describe("stake()", () => {
 		it("transfer token to lockup for staking", async () => {
 			const amount = 100;
-			const lockPeriod = 30; // 5 sec
-			const lockupName = "Lockup 002";
-			const userNonceAddress = deriveUserNonceAddress(wallet.publicKey, service.program.programId);
+			const lockPeriod = 120; // sec
+			const lockupName = "Lockup 001";
+			const lockup = deriveLockupAddress(lockupName, service.program.programId);
+			const userNonceAddress = deriveUserNonceAddress(wallet.publicKey, lockup, service.program.programId);
 			const nonceInfo = await service.getUserNonceInfo(userNonceAddress);
 			const nonce = nonceInfo ? nonceInfo.nonce : 0n;
+			console.log("Nonce:", nonce);
 
 			const payload = await service.stake({
 				amount,

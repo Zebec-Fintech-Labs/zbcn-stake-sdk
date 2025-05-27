@@ -17,7 +17,7 @@ describe("Init Lockup", () => {
 			const stakeToken = "De31sBPcDejCVpZZh1fq8SNs7AcuWcBKuU3k2jqnkmKc";
 			const fee = 0;
 			const feeVault = "AA8B8zv68QCT8pkJL9vd6nAG9MzopARH9xvY1CLgAQQQ";
-			const name = "Lockup 002";
+			const name = "Lockup 001";
 			const rewardSchemes: RewardScheme[] = [
 				{
 					// duration: 2592000, // 30 days
