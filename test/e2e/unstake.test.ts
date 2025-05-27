@@ -6,15 +6,15 @@ describe("Unstake", () => {
 	const network = "devnet";
 	const connection = getConnection("devnet");
 	const wallets = getWallets(network);
-	const wallet = wallets[2];
+	const wallet = wallets[1];
 	const provider = createAnchorProvider(connection, wallet, { commitment: "confirmed" });
 
 	const service = new StakeServiceBuilder().setNetwork(network).setProvider(provider).setProgram().build();
 
 	describe("unstake()", () => {
 		it("transfer token to lockup for staking", async () => {
-			const nonce = 0n;
-			const lockupName = "Lockup 002";
+			const nonce = 3n;
+			const lockupName = "Lockup 001";
 
 			const payload = await service.unstake({
 				nonce,
