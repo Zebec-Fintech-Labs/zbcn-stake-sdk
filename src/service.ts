@@ -155,7 +155,7 @@ export class StakeService {
 		addressLookupTableAccounts?: AddressLookupTableAccount[],
 	): Promise<TransactionPayload> {
 		const errorMap: Map<number, string> = new Map();
-		this.program.idl.errors.forEach((error) => errorMap.set(error.code, "msg" in error ? error.msg : error.name));
+		this.program.idl.errors.forEach((error) => errorMap.set(error.code, error.msg));
 
 		let signTransaction: SignTransactionFunction | undefined = undefined;
 
@@ -223,35 +223,27 @@ export class StakeService {
 
 	async getUnstakeInstruction(
 		feeVault: PublicKey,
-		// feeVaultTokenAccount: PublicKey,
 		lockup: PublicKey,
 		stakePda: PublicKey,
 		rewardToken: PublicKey,
 		rewardVault: PublicKey,
-		// rewardVaultTokenAccount: PublicKey,
 		stakeToken: PublicKey,
 		stakeVault: PublicKey,
-		// stakeVaultTokenAccount: PublicKey,
 		staker: PublicKey,
 		stakerTokenAccount: PublicKey,
-		// stakerRewardTokenAccount: PublicKey,
 		nonce: BN,
 	): Promise<TransactionInstruction> {
 		return this.program.methods
 			.unstakeZbcn(nonce)
 			.accountsPartial({
 				feeVault,
-				// feeVaultTokenAccount,
 				rewardToken,
 				stakeToken,
 				staker,
 				lockup,
 				stakeVault,
-				// stakeVaultTokenAccount,
 				stakePda,
 				rewardVault,
-				// rewardVaultTokenAccount,
-				// stakerRewardTokenAccount,
 				stakerTokenAccount,
 			})
 			.instruction();
@@ -339,7 +331,7 @@ export class StakeService {
 
 		let nonce = BigInt(0);
 		if (userNonceAccount) {
-			BigInt(userNonceAccount.nonce.toString());
+			nonce = BigInt(userNonceAccount.nonce.toString());
 		}
 
 		const stakePda = deriveStakeAddress(staker, lockup, nonce, this.program.programId);
@@ -390,26 +382,18 @@ export class StakeService {
 		const rewardVault = deriveRewardVaultAddress(lockup, this.program.programId);
 		const stakeVault = deriveStakeVaultAddress(lockup, this.program.programId);
 
-		const feeVaultTokenAccount = getAssociatedTokenAddressSync(stakeToken, feeVault, true);
-		const stakeVaultTokenAccount = getAssociatedTokenAddressSync(stakeToken, stakeVault, true);
 		const stakerTokenAccount = getAssociatedTokenAddressSync(stakeToken, staker);
-		const rewardVaultTokenAccount = getAssociatedTokenAddressSync(rewardToken, rewardVault, true);
-		const stakerRewardTokenAccount = getAssociatedTokenAddressSync(rewardToken, staker);
 
 		const instruction = await this.getUnstakeInstruction(
 			feeVault,
-			// feeVaultTokenAccount,
 			lockup,
 			stakePda,
 			rewardToken,
 			rewardVault,
-			// rewardVaultTokenAccount,
 			stakeToken,
 			stakeVault,
-			// stakeVaultTokenAccount,
 			staker,
 			stakerTokenAccount,
-			// stakerRewardTokenAccount,
 			new BN(params.nonce.toString()),
 		);
 
