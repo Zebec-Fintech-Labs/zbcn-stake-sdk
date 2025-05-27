@@ -1,5 +1,5 @@
 {
-	"address": "5CoJpJmTtEgMLUYtabhbKD9fxHRETbCpgYyKYjELG38E",
+	"address": "Fe5ymSEjtQ229rmfhYkNtWR1dS7ctFwoSCN7hibhDLA6",
 	"metadata": {
 		"name": "zebec_stake",
 		"version": "0.1.0",
@@ -582,7 +582,7 @@
 							},
 							{
 								"kind": "account",
-								"path": "reward_token"
+								"path": "stake_token"
 							}
 						],
 						"program": {
@@ -819,7 +819,7 @@
 							},
 							{
 								"kind": "account",
-								"path": "reward_token"
+								"path": "stake_token"
 							}
 						],
 						"program": {
@@ -1190,32 +1190,32 @@
 		{
 			"code": 6000,
 			"name": "InvalidTime",
-			"msg": "Invalid time"
+			"msg": "Invalid Time"
 		},
 		{
 			"code": 6001,
 			"name": "InvalidStakeToken",
-			"msg": "Invalid stake token"
+			"msg": "Invalid Stake Token"
 		},
 		{
 			"code": 6002,
 			"name": "InvalidRewardToken",
-			"msg": "Invalid reward token"
+			"msg": "Invalid Reward Token"
 		},
 		{
 			"code": 6003,
 			"name": "InvalidStakePeriod",
-			"msg": "Invalid stake Period"
+			"msg": "Invalid Stake Period"
 		},
 		{
 			"code": 6004,
 			"name": "InvalidStaker",
-			"msg": "Invalid staker"
+			"msg": "Invalid Staker"
 		},
 		{
 			"code": 6005,
 			"name": "InvaildNonce",
-			"msg": "Invalid nonce"
+			"msg": "Invalid Nonce"
 		},
 		{
 			"code": 6006,
@@ -1224,23 +1224,28 @@
 		},
 		{
 			"code": 6007,
-			"name": "InvalidLockPeriod"
+			"name": "InvalidLockPeriod",
+			"msg": "Invalid Lock Period"
 		},
 		{
 			"code": 6008,
-			"name": "InvalidAmount"
+			"name": "InvalidAmount",
+			"msg": "Invalid Amount"
 		},
 		{
 			"code": 6009,
-			"name": "RewardAlreadyClaimed"
+			"name": "RewardAlreadyClaimed",
+			"msg": "Reward Already Claimed"
 		},
 		{
 			"code": 6010,
-			"name": "StakeRewardNotClaimable"
+			"name": "StakeRewardNotClaimable",
+			"msg": "Stake Reward Not Claimable"
 		},
 		{
 			"code": 6011,
-			"name": "RewardIsZero"
+			"name": "RewardIsZero",
+			"msg": "Reward Is Zero"
 		}
 	],
 	"types": [
@@ -1484,6 +1489,10 @@
 					{
 						"name": "created_time",
 						"type": "i64"
+					},
+					{
+						"name": "claimed",
+						"type": "bool"
 					}
 				]
 			}

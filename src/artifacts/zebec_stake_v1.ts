@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/zebec_stake.json`.
  */
 export type ZebecStake = {
-	address: "5CoJpJmTtEgMLUYtabhbKD9fxHRETbCpgYyKYjELG38E";
+	address: "Fe5ymSEjtQ229rmfhYkNtWR1dS7ctFwoSCN7hibhDLA6";
 	metadata: {
 		name: "zebecStake";
 		version: "0.1.0";
@@ -485,7 +485,7 @@ export type ZebecStake = {
 							},
 							{
 								kind: "account";
-								path: "rewardToken";
+								path: "stakeToken";
 							},
 						];
 						program: {
@@ -697,7 +697,7 @@ export type ZebecStake = {
 							},
 							{
 								kind: "account";
-								path: "rewardToken";
+								path: "stakeToken";
 							},
 						];
 						program: {
@@ -1032,32 +1032,32 @@ export type ZebecStake = {
 		{
 			code: 6000;
 			name: "invalidTime";
-			msg: "Invalid time";
+			msg: "Invalid Time";
 		},
 		{
 			code: 6001;
 			name: "invalidStakeToken";
-			msg: "Invalid stake token";
+			msg: "Invalid Stake Token";
 		},
 		{
 			code: 6002;
 			name: "invalidRewardToken";
-			msg: "Invalid reward token";
+			msg: "Invalid Reward Token";
 		},
 		{
 			code: 6003;
 			name: "invalidStakePeriod";
-			msg: "Invalid stake Period";
+			msg: "Invalid Stake Period";
 		},
 		{
 			code: 6004;
 			name: "invalidStaker";
-			msg: "Invalid staker";
+			msg: "Invalid Staker";
 		},
 		{
 			code: 6005;
 			name: "invaildNonce";
-			msg: "Invalid nonce";
+			msg: "Invalid Nonce";
 		},
 		{
 			code: 6006;
@@ -1067,22 +1067,27 @@ export type ZebecStake = {
 		{
 			code: 6007;
 			name: "invalidLockPeriod";
+			msg: "Invalid Lock Period";
 		},
 		{
 			code: 6008;
 			name: "invalidAmount";
+			msg: "Invalid Amount";
 		},
 		{
 			code: 6009;
 			name: "rewardAlreadyClaimed";
+			msg: "Reward Already Claimed";
 		},
 		{
 			code: 6010;
 			name: "stakeRewardNotClaimable";
+			msg: "Stake Reward Not Claimable";
 		},
 		{
 			code: 6011;
 			name: "rewardIsZero";
+			msg: "Reward Is Zero";
 		},
 	];
 	types: [
@@ -1326,6 +1331,10 @@ export type ZebecStake = {
 					{
 						name: "createdTime";
 						type: "i64";
+					},
+					{
+						name: "claimed";
+						type: "bool";
 					},
 				];
 			};
