@@ -1,3 +1,4 @@
+import assert from "assert";
 import { BigNumber } from "bignumber.js";
 
 import { Address, AnchorProvider, BN, Program, Provider, translateAddress } from "@coral-xyz/anchor";
@@ -320,6 +321,13 @@ export class StakeService {
 			throw new Error("Lockup account does not exists for address: " + lockup);
 		}
 
+		const lockPeriods = lockupAccount.stakeInfo.durationMap.map((item) => item.duration.toNumber());
+		if (!lockPeriods.includes(params.lockPeriod)) {
+			throw new Error(
+				"Invalid lockperiod. Available options are: " + lockPeriods.map((l) => l.toString()).concat(", "),
+			);
+		}
+
 		const stakeToken = lockupAccount.stakedToken.tokenAddress;
 		const stakeVault = deriveStakeVaultAddress(lockup, this.program.programId);
 		const userNonce = deriveUserNonceAddress(staker, lockup, this.program.programId);
@@ -474,6 +482,7 @@ export class StakeService {
 			rewardAmount: BigNumber(stakeAccount.rewardAmount.toString()).div(UNITS_PER_REWARD_TOKEN).toFixed(),
 			stakeClaimed: stakeAccount.stakeClaimed,
 			lockPeriod: stakeAccount.lockPeriod.toNumber(),
+			rewardClaimed: !stakeAccount.rewardAmount.eqn(0),
 		};
 	}
 
@@ -490,6 +499,70 @@ export class StakeService {
 		return {
 			nonce: BigInt(userNonceAccount.nonce.toString()),
 		};
+	}
+
+	async getAllStakeInfos(userAdress: Address, lockupAddress: Address) {
+		const lockupAccount = await this.program.account.lockup.fetchNullable(
+			lockupAddress,
+			this.provider.connection.commitment,
+		);
+
+		if (!lockupAccount) {
+			throw new Error("Lockup account does not exists for address: " + lockupAddress);
+		}
+
+		const stakeTokenAddress = lockupAccount.stakedToken.tokenAddress;
+		const rewardTokenAddress = lockupAccount.rewardToken.tokenAddress;
+
+		const stakeTokenDecimals = await getMintDecimals(this.provider.connection, stakeTokenAddress);
+		const rewardTokenDecimals = await getMintDecimals(this.provider.connection, rewardTokenAddress);
+
+		const UNITS_PER_STAKE_TOKEN = TEN_BIGNUM.pow(stakeTokenDecimals);
+		const UNITS_PER_REWARD_TOKEN = TEN_BIGNUM.pow(rewardTokenDecimals);
+
+		const userNonceAddress = deriveUserNonceAddress(userAdress, lockupAddress, this.program.programId);
+		const userNonceAccount = await this.program.account.userNonce.fetchNullable(
+			userNonceAddress,
+			this.provider.connection.commitment,
+		);
+
+		if (!userNonceAccount) {
+			return [];
+		}
+
+		const currentNonce = userNonceAccount.nonce.toNumber();
+
+		const nonces = Array.from({ length: currentNonce }, (_, i) => BigInt(i));
+
+		const promises = nonces.map(async (nonce) => {
+			const stakeAddress = deriveStakeAddress(userAdress, lockupAddress, nonce, this.program.programId);
+
+			const stakeAccount = await this.program.account.userStakeData.fetch(
+				stakeAddress,
+				this.provider.connection.commitment,
+			);
+
+			const signatures = await this.provider.connection.getSignaturesForAddress(stakeAddress, {}, "finalized");
+			const stakeSignatures = signatures.filter((s) => {
+				assert(s.blockTime, "Blocktime is missing in signature info");
+				return !s.err && s.blockTime === stakeAccount.createdTime.toNumber();
+			});
+
+			const info: StakeInfoWithHash = {
+				hash: stakeSignatures[stakeSignatures.length - 1].signature,
+				nonce: BigInt(stakeAccount.nonce.toString()),
+				createdTime: stakeAccount.createdTime.toNumber(),
+				stakedAmount: BigNumber(stakeAccount.stakedAmount.toString()).div(UNITS_PER_STAKE_TOKEN).toFixed(),
+				rewardAmount: BigNumber(stakeAccount.rewardAmount.toString()).div(UNITS_PER_REWARD_TOKEN).toFixed(),
+				stakeClaimed: stakeAccount.stakeClaimed,
+				lockPeriod: stakeAccount.lockPeriod.toNumber(),
+				rewardClaimed: !stakeAccount.rewardAmount.eqn(0),
+			};
+
+			return info;
+		});
+
+		return Promise.all(promises);
 	}
 }
 
@@ -544,8 +617,13 @@ export type StakeInfo = {
 	rewardAmount: string;
 	stakeClaimed: boolean;
 	lockPeriod: number;
+	rewardClaimed: boolean;
 };
 
 export type UserNonceInfo = {
 	nonce: bigint;
+};
+
+export type StakeInfoWithHash = StakeInfo & {
+	hash: string;
 };
