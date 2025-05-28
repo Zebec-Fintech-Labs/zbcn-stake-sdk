@@ -1,4 +1,3 @@
-import assert from "assert";
 import { BigNumber } from "bignumber.js";
 
 import { Address, AnchorProvider, BN, Program, Provider, translateAddress } from "@coral-xyz/anchor";
@@ -544,8 +543,7 @@ export class StakeService {
 
 			const signatures = await this.provider.connection.getSignaturesForAddress(stakeAddress, {}, "finalized");
 			const stakeSignatures = signatures.filter((s) => {
-				assert(s.blockTime, "Blocktime is missing in signature info");
-				return !s.err && s.blockTime === stakeAccount.createdTime.toNumber();
+				return !s.err && (s.blockTime ?? 0) === stakeAccount.createdTime.toNumber();
 			});
 
 			const info: StakeInfoWithHash = {
