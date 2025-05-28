@@ -1,8 +1,9 @@
 {
-  "name": "@zebec-network/zbcn-stake-sdk",
-  "version": "0.0.1",
+  "name": "@zebec-network/zebec-stake-sdk",
+  "version": "1.0.0",
   "description": "An SDK for zebec network stake solana program",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "author": "Ashish Sapkota",
   "license": "MIT",
   "files": [
@@ -12,7 +13,8 @@
     "solana",
     "zebec",
     "zebec network",
-    "stake"
+    "stake",
+    "staking"
   ],
   "scripts": {
     "build": "npm run clean && tsc",
