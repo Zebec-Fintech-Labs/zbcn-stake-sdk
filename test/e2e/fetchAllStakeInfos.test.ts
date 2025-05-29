@@ -16,7 +16,7 @@ describe("Fetch All Stakes Info", () => {
 			const lockupName = "Lockup 001";
 			const lockup = deriveLockupAddress(lockupName, service.program.programId);
 
-			const infos = await service.getAllStakeInfos(wallet.publicKey, lockup);
+			const infos = await service.getAllStakeInfos("5BQwQmwJGBkL4rVjPxbS8JofmEPG2gCPTvxFUwSWfkG8", lockup);
 
 			console.log("stake infos:", infos);
 		});

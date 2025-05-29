@@ -481,7 +481,6 @@ export class StakeService {
 			rewardAmount: BigNumber(stakeAccount.rewardAmount.toString()).div(UNITS_PER_REWARD_TOKEN).toFixed(),
 			stakeClaimed: stakeAccount.stakeClaimed,
 			lockPeriod: stakeAccount.lockPeriod.toNumber(),
-			rewardClaimed: !stakeAccount.rewardAmount.eqn(0),
 		};
 	}
 
@@ -542,21 +541,22 @@ export class StakeService {
 			);
 
 			const signatures = await this.provider.connection.getSignaturesForAddress(stakeAddress, {}, "finalized");
+
 			const stakeSignatures = signatures.filter((s) => {
 				return !s.err && (s.blockTime ?? 0) === stakeAccount.createdTime.toNumber();
 			});
 
+			const signatureInfo = stakeSignatures[stakeSignatures.length - 1];
+
 			const info: StakeInfoWithHash = {
-				hash: stakeSignatures[stakeSignatures.length - 1].signature,
+				hash: signatureInfo ? signatureInfo.signature : "",
 				nonce: BigInt(stakeAccount.nonce.toString()),
 				createdTime: stakeAccount.createdTime.toNumber(),
 				stakedAmount: BigNumber(stakeAccount.stakedAmount.toString()).div(UNITS_PER_STAKE_TOKEN).toFixed(),
 				rewardAmount: BigNumber(stakeAccount.rewardAmount.toString()).div(UNITS_PER_REWARD_TOKEN).toFixed(),
 				stakeClaimed: stakeAccount.stakeClaimed,
 				lockPeriod: stakeAccount.lockPeriod.toNumber(),
-				rewardClaimed: !stakeAccount.rewardAmount.eqn(0),
 			};
-
 			return info;
 		});
 
@@ -615,7 +615,6 @@ export type StakeInfo = {
 	rewardAmount: string;
 	stakeClaimed: boolean;
 	lockPeriod: number;
-	rewardClaimed: boolean;
 };
 
 export type UserNonceInfo = {
