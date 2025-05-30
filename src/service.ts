@@ -1,3 +1,4 @@
+import assert from "assert";
 import { BigNumber } from "bignumber.js";
 
 import { Address, AnchorProvider, BN, Program, Provider, translateAddress } from "@coral-xyz/anchor";
@@ -193,6 +194,7 @@ export class StakeService {
 				durationMap: data.rewardSchemes,
 				feeVault: data.feeVault,
 				name: data.name,
+				minimumStake: data.minimumStake,
 			})
 			.accountsPartial({
 				creator,
@@ -257,6 +259,7 @@ export class StakeService {
 		fee: Numeric;
 		feeVault: Address;
 		rewardSchemes: RewardScheme[];
+		minimumStake: Numeric;
 	}): Promise<TransactionPayload> {
 		const creator = params.creator ? translateAddress(params.creator) : this.provider.publicKey;
 
@@ -268,7 +271,7 @@ export class StakeService {
 		const feeVault = translateAddress(params.feeVault);
 
 		const stakeTokenDecimals = await getMintDecimals(this.provider.connection, stakeToken);
-
+		const UNITS_PER_STAKE_TOKEN = TEN_BIGNUM.pow(stakeTokenDecimals);
 		const rewardSchemes = params.rewardSchemes.map<ParsedRewardScheme>((value) => {
 			return {
 				duration: new BN(value.duration),
@@ -280,7 +283,9 @@ export class StakeService {
 		const rewardVault = deriveRewardVaultAddress(lockup, this.program.programId);
 		const stakeVault = deriveStakeVaultAddress(lockup, this.program.programId);
 
-		const fee = new BN(BigNumber(params.fee).times(TEN_BIGNUM.pow(stakeTokenDecimals)).toFixed());
+		const fee = new BN(BigNumber(params.fee).times(UNITS_PER_STAKE_TOKEN).toFixed(0));
+		const minimumStake = new BN(BigNumber(params.minimumStake).times(UNITS_PER_STAKE_TOKEN).toFixed(0));
+
 		const instruction = await this.getInitLockupInstruction(
 			creator,
 			lockup,
@@ -293,6 +298,7 @@ export class StakeService {
 				feeVault: feeVault,
 				name: params.name,
 				rewardSchemes,
+				minimumStake,
 			},
 		);
 
@@ -424,6 +430,7 @@ export class StakeService {
 		const UNITS_PER_STAKE_TOKEN = TEN_BIGNUM.pow(stakeTokenDecimals);
 
 		return {
+			address: lockupAddress.toString(),
 			feeInfo: {
 				fee: BigNumber(lockupAccount.feeInfo.fee.toString()).div(UNITS_PER_STAKE_TOKEN).toFixed(),
 				feeVault: lockupAccount.feeInfo.feeVault.toString(),
@@ -442,6 +449,7 @@ export class StakeService {
 					duration: value.duration.toNumber(),
 					rewardRate: bpsToPercent(value.reward.toString()),
 				})),
+				minimumStake: BigNumber(lockupAccount.stakeInfo.minimumStake.toString()).div(UNITS_PER_STAKE_TOKEN).toFixed(),
 			},
 		};
 	}
@@ -475,12 +483,15 @@ export class StakeService {
 		}
 
 		return {
+			address: stakeAddress.toString(),
 			nonce: BigInt(stakeAccount.nonce.toString()),
 			createdTime: stakeAccount.createdTime.toNumber(),
 			stakedAmount: BigNumber(stakeAccount.stakedAmount.toString()).div(UNITS_PER_STAKE_TOKEN).toFixed(),
 			rewardAmount: BigNumber(stakeAccount.rewardAmount.toString()).div(UNITS_PER_REWARD_TOKEN).toFixed(),
 			stakeClaimed: stakeAccount.stakeClaimed,
 			lockPeriod: stakeAccount.lockPeriod.toNumber(),
+			lockup: stakeAccount.lockup.toString(),
+			staker: stakeAccount.staker.toString(),
 		};
 	}
 
@@ -495,11 +506,12 @@ export class StakeService {
 		}
 
 		return {
+			address: userNonceAddress.toString(),
 			nonce: BigInt(userNonceAccount.nonce.toString()),
 		};
 	}
 
-	async getAllStakeInfos(userAdress: Address, lockupAddress: Address) {
+	async getAllStakesInfo(userAdress: Address, lockupAddress: Address) {
 		const lockupAccount = await this.program.account.lockup.fetchNullable(
 			lockupAddress,
 			this.provider.connection.commitment,
@@ -532,35 +544,78 @@ export class StakeService {
 
 		const nonces = Array.from({ length: currentNonce }, (_, i) => BigInt(i));
 
-		const promises = nonces.map(async (nonce) => {
-			const stakeAddress = deriveStakeAddress(userAdress, lockupAddress, nonce, this.program.programId);
+		const stakeAddresses = nonces.map((nonce) =>
+			deriveStakeAddress(userAdress, lockupAddress, nonce, this.program.programId),
+		);
 
-			const stakeAccount = await this.program.account.userStakeData.fetch(
-				stakeAddress,
-				this.provider.connection.commitment,
-			);
+		const accountInfos = await this.provider.connection.getMultipleAccountsInfo(stakeAddresses, {
+			commitment: "finalized",
+		});
 
-			const signatures = await this.provider.connection.getSignaturesForAddress(stakeAddress, {}, "finalized");
-
-			const stakeSignatures = signatures.filter((s) => {
-				return !s.err && (s.blockTime ?? 0) === stakeAccount.createdTime.toNumber();
-			});
-
-			const signatureInfo = stakeSignatures[stakeSignatures.length - 1];
-
-			const info: StakeInfoWithHash = {
-				hash: signatureInfo ? signatureInfo.signature : "",
+		const stakeAccountsInfo = accountInfos.map((value, i) => {
+			assert(value, "Account does not exists for stake address: " + stakeAddresses[i] + " at nonce: " + nonces[i]);
+			const stakeAccount = this.program.coder.accounts.decode(this.program.idl.accounts[2].name, value.data);
+			const info: StakeInfo = {
+				address: stakeAddresses[i].toString(),
 				nonce: BigInt(stakeAccount.nonce.toString()),
 				createdTime: stakeAccount.createdTime.toNumber(),
 				stakedAmount: BigNumber(stakeAccount.stakedAmount.toString()).div(UNITS_PER_STAKE_TOKEN).toFixed(),
 				rewardAmount: BigNumber(stakeAccount.rewardAmount.toString()).div(UNITS_PER_REWARD_TOKEN).toFixed(),
 				stakeClaimed: stakeAccount.stakeClaimed,
 				lockPeriod: stakeAccount.lockPeriod.toNumber(),
+				lockup: stakeAccount.lockup.toString(),
+				staker: stakeAccount.staker.toString(),
+			};
+
+			return info;
+		});
+
+		const promises = stakeAccountsInfo.map(async (stakeInfo) => {
+			const signatures = await this.provider.connection.getSignaturesForAddress(
+				translateAddress(stakeInfo.address),
+				{},
+				"finalized",
+			);
+
+			const stakeSignatures = signatures.filter((s) => {
+				return !s.err && (s.blockTime ?? 0) === stakeInfo.createdTime;
+			});
+
+			const signatureInfo = stakeSignatures[stakeSignatures.length - 1];
+
+			const info: StakeInfoWithHash = {
+				hash: signatureInfo ? signatureInfo.signature : "",
+				...stakeInfo,
 			};
 			return info;
 		});
 
 		return Promise.all(promises);
+	}
+
+	async getTotalStakeCount(lockupAddress: Address) {
+		const dataSize = this.program.account.userStakeData.size;
+
+		const accountInfos = await this.provider.connection.getProgramAccounts(this.program.programId, {
+			commitment: "finalized",
+			dataSlice: {
+				length: 0,
+				offset: 0,
+			},
+			filters: [
+				{
+					dataSize,
+				},
+				{
+					memcmp: {
+						bytes: lockupAddress.toString(),
+						offset: 81,
+					},
+				},
+			],
+		});
+
+		return accountInfos.length;
 	}
 }
 
@@ -569,6 +624,7 @@ export type InitLockupInstructionData = {
 	fee: BN;
 	feeVault: PublicKey;
 	name: string;
+	minimumStake: BN;
 };
 
 export type ParsedRewardScheme = {
@@ -590,6 +646,7 @@ export type StakeInstructionData = {
 };
 
 export type LockupInfo = {
+	address: string;
 	feeInfo: {
 		fee: string;
 		feeVault: string;
@@ -605,19 +662,24 @@ export type LockupInfo = {
 		name: string;
 		creator: string;
 		rewardSchemes: RewardScheme[];
+		minimumStake: string;
 	};
 };
 
 export type StakeInfo = {
+	address: string;
 	nonce: bigint;
 	createdTime: number;
 	stakedAmount: string;
 	rewardAmount: string;
 	stakeClaimed: boolean;
 	lockPeriod: number;
+	staker: string;
+	lockup: string;
 };
 
 export type UserNonceInfo = {
+	address: string;
 	nonce: bigint;
 };
 
