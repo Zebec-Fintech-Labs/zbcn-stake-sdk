@@ -1113,6 +1113,11 @@ export type ZebecStake = {
 			name: "stakeNotClaimable";
 			msg: "Stake Not Claimable";
 		},
+		{
+			code: 6014;
+			name: "minimumStakeNotMet";
+			msg: "minimum Stake Not Met";
+		},
 	];
 	types: [
 		{
@@ -1163,6 +1168,10 @@ export type ZebecStake = {
 					{
 						name: "feeVault";
 						type: "pubkey";
+					},
+					{
+						name: "minimumStake";
+						type: "u64";
 					},
 					{
 						name: "durationMap";
@@ -1241,6 +1250,10 @@ export type ZebecStake = {
 					{
 						name: "creator";
 						type: "pubkey";
+					},
+					{
+						name: "minimumStake";
+						type: "u64";
 					},
 					{
 						name: "durationMap";
@@ -1331,6 +1344,14 @@ export type ZebecStake = {
 					{
 						name: "lockPeriod";
 						type: "i64";
+					},
+					{
+						name: "staker";
+						type: "pubkey";
+					},
+					{
+						name: "lockup";
+						type: "pubkey";
 					},
 				];
 			};

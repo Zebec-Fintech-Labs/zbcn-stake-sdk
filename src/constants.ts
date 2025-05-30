@@ -15,9 +15,9 @@ export const isSdkEnvDev = SDK_ENV === "development";
  */
 export const ZEBEC_STAKE_PROGRAM = {
 	/** Mainnet Program Id */
-	mainnet: "6S5tbu8jPJKFvpBMjaMPQbcwcrw8iHcuGnXH8ZwHgwaE",
+	mainnet: "zSTKzGLiN6T6EVzhBiL6sjULXMahDavAS2p4R62afGv",
 	/** Devnet Program Id */
-	devnet: "6S5tbu8jPJKFvpBMjaMPQbcwcrw8iHcuGnXH8ZwHgwaE",
+	devnet: "zSTKzGLiN6T6EVzhBiL6sjULXMahDavAS2p4R62afGv",
 };
 
 export const ZBCN = new PublicKey("ZBCNpuD7YMXzTHB2fhGkGi78MNsHGLRXUhRewNRm9RU");
