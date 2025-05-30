@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/zebec_stake.json`.
  */
 export type ZebecStake = {
-	address: "Fe5ymSEjtQ229rmfhYkNtWR1dS7ctFwoSCN7hibhDLA6";
+	address: "zSTKzGLiN6T6EVzhBiL6sjULXMahDavAS2p4R62afGv";
 	metadata: {
 		name: "zebecStake";
 		version: "0.1.0";
@@ -954,6 +954,20 @@ export type ZebecStake = {
 				},
 				{
 					name: "lockup";
+					writable: true;
+					pda: {
+						seeds: [
+							{
+								kind: "const";
+								value: [122, 101, 98, 101, 99, 95, 108, 111, 99, 107, 117, 112];
+							},
+							{
+								kind: "account";
+								path: "lockup.stake_info.name";
+								account: "lockup";
+							},
+						];
+					};
 				},
 				{
 					name: "userNonce";
@@ -1088,6 +1102,16 @@ export type ZebecStake = {
 			code: 6011;
 			name: "rewardIsZero";
 			msg: "Reward Is Zero";
+		},
+		{
+			code: 6012;
+			name: "stakeAlreadyClaimed";
+			msg: "Stake Already Claimed";
+		},
+		{
+			code: 6013;
+			name: "stakeNotClaimable";
+			msg: "Stake Not Claimable";
 		},
 	];
 	types: [
