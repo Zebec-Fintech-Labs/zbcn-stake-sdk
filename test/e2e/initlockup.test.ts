@@ -35,6 +35,8 @@ describe("Init Lockup", () => {
 					rewardRate: "15",
 				},
 			];
+			const minimumStake = 100;
+
 			const payload = await service.initLockup({
 				rewardToken,
 				stakeToken,
@@ -42,6 +44,7 @@ describe("Init Lockup", () => {
 				feeVault,
 				name,
 				rewardSchemes,
+				minimumStake,
 			});
 
 			const signature = await payload.execute();

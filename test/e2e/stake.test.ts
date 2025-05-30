@@ -14,7 +14,7 @@ describe("Stake", () => {
 
 	describe("stake()", () => {
 		it("transfer token to lockup for staking", async () => {
-			const amount = 100;
+			const amount = 1000;
 			const lockPeriod = 120; // sec
 			const lockupName = "Lockup 001";
 			const lockup = deriveLockupAddress(lockupName, service.program.programId);
