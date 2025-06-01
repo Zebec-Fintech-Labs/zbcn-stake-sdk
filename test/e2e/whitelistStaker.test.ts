@@ -10,16 +10,30 @@ import { PublicKey, TransactionMessage, VersionedTransaction } from "@solana/web
 import {
 	createAnchorProvider,
 	deriveLockupAddress,
-	deriveRewardVaultAddress,
 	deriveStakeAddress,
-	deriveStakeVaultAddress,
-	StakeServiceBuilder,
 	ZEBEC_STAKE_IDL_V1,
 	ZebecStakeIdlV1,
 } from "../../src";
 import { chunkArray, getConnection, getWallets } from "../shared";
 
-describe("Whitelist Stakers", () => {
+interface StakeInfo {
+	wallet: string;
+	amount: number;
+	createdTime: number;
+	lockPeriodInSeconds: number;
+	claimed: boolean;
+	nonce: number;
+}
+
+interface RawStakeData {
+	wallet: string;
+	amount: number;
+	lockTime: number;
+	lockDuration: number;
+	isRewardClaimed: boolean;
+}
+
+describe("Whitelisting Stakers", () => {
 	const network = "devnet";
 	const connection = getConnection(network);
 	const wallets = getWallets(network);
@@ -27,85 +41,68 @@ describe("Whitelist Stakers", () => {
 	console.log("\twallet:", wallet.publicKey.toString());
 	const provider = createAnchorProvider(connection, wallet);
 	const program = new Program<ZebecStakeIdlV1>(ZEBEC_STAKE_IDL_V1, provider);
-	const service = new StakeServiceBuilder()
-		.setNetwork(network)
-		.setProvider(provider)
-		.setProgram((_) => program)
-		.build();
+	// const service = new StakeServiceBuilder()
+	// 	.setNetwork(network)
+	// 	.setProvider(provider)
+	// 	.setProgram((_) => program)
+	// 	.build();
 	const SECONDS_IN_A_DAY = 86400;
 
 	describe("prepareData", () => {
 		it("should prepare data for whitelist staker", async () => {
 			const file = fs.readFileSync(path.join(__dirname, "staking-data-05-25.json"), "utf-8");
-			const data = JSON.parse(file);
+			const data: RawStakeData[] = JSON.parse(file);
 			assert(Array.isArray(data));
 
-			interface StakeInfo {
-				wallet: string;
-				amount: number;
-				createdTime: number;
-				lockPeriodInSeconds: number;
-				isRewardClaimed: boolean;
+			const stakesMap: Map<string, StakeInfo[]> = new Map<string, StakeInfo[]>();
+
+			for (const datum of data) {
+				// Validate input data
+				assert(typeof datum.wallet === "string", "Wallet should be a string");
+				assert(typeof datum.amount === "number", "Amount should be a number");
+				assert(typeof datum.lockTime === "number", "Lock time should be a number");
+				assert(typeof datum.lockDuration === "number", "Lock duration should be a number");
+				assert(typeof datum.isRewardClaimed === "boolean", "isRewardClaimed should be a boolean");
+
+				const stakeInfo: StakeInfo = {
+					wallet: datum.wallet,
+					amount: datum.amount,
+					createdTime: datum.lockTime,
+					lockPeriodInSeconds: datum.lockDuration * SECONDS_IN_A_DAY,
+					claimed: datum.isRewardClaimed,
+					nonce: 0,
+				};
+
+				// Get or create wallet stakes array
+				if (!stakesMap.has(datum.wallet)) {
+					stakesMap.set(datum.wallet, []);
+				}
+
+				stakesMap.get(datum.wallet)!.push(stakeInfo as StakeInfo);
 			}
 
-			let stakingData: Map<string, StakeInfo[]> = new Map<string, StakeInfo[]>();
+			// Sort stakes by creation time for each wallet and assign nonces
+			const allStakes: StakeInfo[] = [];
 
-			data
-				.map((datum) => {
-					const wallet = datum.wallet;
-					const amount = datum.amount;
-					const createdTime = datum.lockTime;
-					const lockPeriodInDays = datum.lockDuration;
-					const isRewardClaimed = datum.isRewardClaimed;
+			for (const [_, stakes] of stakesMap.entries()) {
+				// Sort by creation time
+				stakes.sort((a, b) => a.createdTime - b.createdTime);
 
-					assert(typeof wallet === "string");
-					assert(typeof amount === "number");
-					assert(typeof createdTime === "number");
-					assert(typeof lockPeriodInDays === "number");
-					assert(typeof isRewardClaimed === "boolean");
-
-					return {
-						wallet,
-						amount,
-						createdTime,
-						lockPeriodInSeconds: lockPeriodInDays * SECONDS_IN_A_DAY,
-						isRewardClaimed,
-					};
-				})
-				.map((item) => {
-					if (!stakingData.has(item.wallet)) {
-						stakingData.set(item.wallet, []);
-					}
-
-					const curentStakes = stakingData.get(item.wallet)!;
-					const stakeInfo: StakeInfo = {
-						wallet: item.wallet,
-						amount: item.amount,
-						createdTime: item.createdTime,
-						lockPeriodInSeconds: item.lockPeriodInSeconds,
-						isRewardClaimed: item.isRewardClaimed,
-					};
-
-					curentStakes.push(stakeInfo);
-					curentStakes.sort((a, b) => {
-						const cmp = BigNumber(a.createdTime).comparedTo(b.createdTime);
-						assert(cmp != null, "Comparison result should not be null");
-						return cmp;
-					});
+				// Assign nonces and add to final array
+				stakes.forEach((stake, index) => {
+					stake.nonce = index;
+					allStakes.push(stake);
 				});
+			}
 
-			fs.writeFileSync(
-				path.join(__dirname, "staking-data-05-25-processed.json"),
-				JSON.stringify(Array.from(stakingData.entries()), null, 2),
-				"utf-8",
-			);
+			fs.writeFileSync(path.join(__dirname, "output.json"), JSON.stringify(allStakes, null, 2), "utf-8");
 		});
 	});
 
-	describe("whitelistStaker()", () => {
+	describe("whitelistStakers", () => {
 		it("whitelist stakers", async () => {
 			const file = fs.readFileSync(path.join(__dirname, "output.json"), "utf-8");
-			const data = JSON.parse(file);
+			const data: StakeInfo[] = JSON.parse(file);
 			assert(Array.isArray(data));
 
 			const chunkedArray = chunkArray(data, 5);
@@ -118,31 +115,30 @@ describe("Whitelist Stakers", () => {
 			const stakeTokenDecimals = 6;
 			const UNITS_PER_TOKEN = 10 ** stakeTokenDecimals;
 
-			for (let i = 17; i < chunkedArray.length; i++) {
+			for (let i = 438; i < chunkedArray.length; i++) {
 				const chunk = chunkedArray[i];
-				console.log("chunk:", i, "length:", chunk.length);
+				console.log("chunk: %d, item count: %d", i, chunk.length);
 
 				const ixs = await Promise.all(
 					chunk.map(async (item) => {
 						const staker = item.wallet;
-						const createdTime = item.lockTime;
-						const lockPeriodInDays = item.lockDuration;
+						const createdTime = item.createdTime;
+						const lockPeriodInSeconds = item.lockPeriodInSeconds;
 						const nonce = item.nonce;
 						const amount = item.amount;
-						const claimed = item.isRewardClaimed;
+						const claimed = item.claimed;
 
 						assert(typeof staker === "string");
 						assert(typeof amount === "number");
 						assert(typeof createdTime === "number");
-						assert(typeof lockPeriodInDays === "number");
+						assert(typeof lockPeriodInSeconds === "number");
 						assert(typeof nonce === "number");
 						assert(typeof claimed === "boolean");
 
-						console.log("staker:", staker);
-						console.log("nonce:", nonce);
+						// console.log("staker:", staker);
+						// console.log("nonce:", nonce);
 
 						const amountInUnits = BigNumber(amount).times(UNITS_PER_TOKEN).toFixed(0);
-						const lockPeriodInSeconds = lockPeriodInDays * SECONDS_IN_A_DAY; // Convert days to seconds
 						const stakePda = deriveStakeAddress(staker, lockup, BigInt(nonce), program.programId);
 
 						return program.methods
@@ -193,33 +189,28 @@ describe("Whitelist Stakers", () => {
 				console.log("tx:", signature);
 			}
 		});
+	});
 
+	describe("whitelistSingleStaker", () => {
 		it("whitelist single staker", async () => {
 			const stakeToken = "De31sBPcDejCVpZZh1fq8SNs7AcuWcBKuU3k2jqnkmKc";
 			const lockupName = "Lockup 001";
 			const lockup = deriveLockupAddress(lockupName, program.programId);
-			console.log("lockup address:", lockup.toString());
+			// console.log("lockup address:", lockup.toString());
 			const stakeTokenDecimals = 6;
 			const UNITS_PER_TOKEN = 10 ** stakeTokenDecimals;
 
-			const staker = "Bux7a8ifBH9zmbh6pJ4erL8v5BjsWZ97G3R7gLyxMGgH";
-			const createdTime = Math.floor(Date.now() / 1000); // Current time in seconds
-			// const lockPeriodInDays = 30;
-			const nonce = 3;
-			const amount = 1000;
-			const claimed = true;
-
+			const staker = "5BQwQmwJGBkL4rVjPxbS8JofmEPG2gCPTvxFUwSWfkG8";
+			// const staker = wallets[2].publicKey.toString();
 			console.log("staker:", staker);
-			console.log("nonce:", nonce);
+			const nonce = 9;
+			const amount = 1000;
+			const claimed = false;
+			const createdTime = Math.floor(Date.now() / 1000); // Current time in seconds
+			const lockPeriodInSeconds = 120;
 
 			const amountInUnits = BigNumber(amount).times(UNITS_PER_TOKEN).toFixed(0);
-			const lockPeriodInSeconds = 30; // Convert days to seconds
 			const stakePda = deriveStakeAddress(staker, lockup, BigInt(nonce), program.programId);
-
-			const stakeVault = deriveStakeVaultAddress(lockup, program.programId);
-			console.log("stakeVault:", stakeVault.toString());
-			const rewardVault = deriveRewardVaultAddress(lockup, program.programId);
-			console.log("rewardVault:", rewardVault.toString());
 
 			const ix = await program.methods
 				.whitelistStaker({

@@ -6,7 +6,7 @@ describe("Fetch Lockup Info", () => {
 	const network = "devnet";
 	const connection = getConnection("devnet");
 	const wallets = getWallets(network);
-	const wallet = wallets[0];
+	const wallet = wallets[1];
 	const provider = createReadonlyProvider(connection, wallet.publicKey);
 
 	const service = new StakeServiceBuilder().setNetwork(network).setProvider(provider).setProgram().build();

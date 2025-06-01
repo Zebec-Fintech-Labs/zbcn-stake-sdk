@@ -47,7 +47,7 @@ describe("Init Lockup", () => {
 				minimumStake,
 			});
 
-			const signature = await payload.execute();
+			const signature = await payload.execute({ commitment: "finalized" });
 
 			console.log("signature:", signature);
 		});
