@@ -28,6 +28,7 @@ import {
 	deriveUserNonceAddress,
 } from "./pda";
 import { createReadonlyProvider, ReadonlyProvider } from "./providers";
+import { callWithExponentialBackoff } from "./utils";
 
 type ProgramCreateFunction = (provider: ReadonlyProvider | AnchorProvider) => Program<ZebecStakeIdlV1>;
 
@@ -570,11 +571,11 @@ export class StakeService {
 			return info;
 		});
 
+		// Your mapping with exponential backoff applied to the API call.
 		const promises = stakeAccountsInfo.map(async (stakeInfo) => {
-			const signatures = await this.provider.connection.getSignaturesForAddress(
-				translateAddress(stakeInfo.address),
-				{},
-				"finalized",
+			// Wrap the asynchronous call with our exponential backoff helper.
+			const signatures = await callWithExponentialBackoff(async () =>
+				this.provider.connection.getSignaturesForAddress(translateAddress(stakeInfo.address), {}, "finalized"),
 			);
 
 			const stakeSignatures = signatures.filter((s) => {
@@ -583,7 +584,7 @@ export class StakeService {
 
 			const signatureInfo = stakeSignatures[stakeSignatures.length - 1];
 
-			const info: StakeInfoWithHash = {
+			const info = {
 				hash: signatureInfo ? signatureInfo.signature : "",
 				...stakeInfo,
 			};
