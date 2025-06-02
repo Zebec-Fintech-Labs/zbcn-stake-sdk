@@ -13,7 +13,7 @@ describe("Fetch Lockup Info", () => {
 
 	describe("getLockupInfo()", () => {
 		it("fetch lockup information", async () => {
-			const lockupName = "Lockup 001";
+			const lockupName = "Lockup 002";
 			const lockup = deriveLockupAddress(lockupName, service.program.programId);
 			console.log("lockup address:", lockup.toString());
 			const info = await service.getLockupInfo(lockup);

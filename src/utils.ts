@@ -1,23 +1,38 @@
+import { sleep } from "@zebec-network/core-utils";
+
 // Set your backoff parameters
-const MAX_ATTEMPTS = 5;
-const INITIAL_DELAY = 100; // in milliseconds
+const MAX_RETRIES = 5;
+const MIN_DELAY = 200; // in milliseconds
 const BACKOFF_FACTOR = 2;
+const MAX_DELAY = 30000;
 
 // Helper function that wraps an async operation with exponential backoff.
-export async function callWithExponentialBackoff<T>(fn: () => T, attemptsLeft = MAX_ATTEMPTS, delay = INITIAL_DELAY) {
-	try {
-		return await fn();
-	} catch (error) {
-		if (attemptsLeft === 1) {
-			// If no attempts remain, rethrow the error.
-			throw error;
+export async function callWithEnhancedBackoff<T>(
+	fn: () => Promise<T>,
+	maxRetries: number = MAX_RETRIES,
+	backoffFactor: number = BACKOFF_FACTOR,
+	baseDelay: number = MIN_DELAY,
+	maxDelay: number = MAX_DELAY,
+): Promise<T> {
+	for (let attempt = 0; attempt <= maxRetries; attempt++) {
+		try {
+			return await fn();
+		} catch (error: any) {
+			if (attempt === maxRetries) throw error;
+
+			let delay = Math.min(baseDelay * Math.pow(backoffFactor, attempt), maxDelay);
+
+			// Handle 429 specifically with longer delays
+			if (error?.status === 429 || error?.code === 429 || error?.message?.includes("429")) {
+				delay = Math.min(delay * backoffFactor, maxDelay); // Double delay for rate limits
+				console.warn(`Rate limit hit, waiting ${delay}ms before retry ${attempt + 1}/${maxRetries}`);
+			}
+
+			// Add jitter to prevent thundering herd
+			const jitter = Math.random() * 0.3 * delay;
+			await sleep(delay + jitter);
 		}
-		console.warn(
-			`Error encountered: ${error instanceof Error ? error.message : "Unknown error"}. Retrying in ${delay} ms... (${attemptsLeft - 1} attempts left)`,
-		);
-		// Wait for the delay period.
-		await new Promise((resolve) => setTimeout(resolve, delay));
-		// Try again with one fewer attempt and an exponentially increased delay.
-		return callWithExponentialBackoff(fn, attemptsLeft - 1, delay * BACKOFF_FACTOR);
 	}
+
+	throw new Error("Max retries exceeded");
 }

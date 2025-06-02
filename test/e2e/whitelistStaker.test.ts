@@ -68,7 +68,7 @@ describe("Whitelisting Stakers", () => {
 					wallet: datum.wallet,
 					amount: datum.amount,
 					createdTime: datum.lockTime,
-					lockPeriodInSeconds: datum.lockDuration * SECONDS_IN_A_DAY,
+					lockPeriodInSeconds: datum.lockDuration, // todo: convert to seconds
 					claimed: datum.isRewardClaimed,
 					nonce: 0,
 				};
@@ -109,13 +109,13 @@ describe("Whitelisting Stakers", () => {
 			console.log("chunkedList length:", chunkedArray.length);
 
 			const stakeToken = "De31sBPcDejCVpZZh1fq8SNs7AcuWcBKuU3k2jqnkmKc";
-			const lockupName = "Lockup 001";
+			const lockupName = "Lockup 002";
 			const lockup = deriveLockupAddress(lockupName, program.programId);
 			console.log("lockup address:", lockup.toString());
 			const stakeTokenDecimals = 6;
 			const UNITS_PER_TOKEN = 10 ** stakeTokenDecimals;
 
-			for (let i = 438; i < chunkedArray.length; i++) {
+			for (let i = 0; i < chunkedArray.length; i++) {
 				const chunk = chunkedArray[i];
 				console.log("chunk: %d, item count: %d", i, chunk.length);
 
@@ -194,7 +194,7 @@ describe("Whitelisting Stakers", () => {
 	describe("whitelistSingleStaker", () => {
 		it("whitelist single staker", async () => {
 			const stakeToken = "De31sBPcDejCVpZZh1fq8SNs7AcuWcBKuU3k2jqnkmKc";
-			const lockupName = "Lockup 001";
+			const lockupName = "Lockup 002";
 			const lockup = deriveLockupAddress(lockupName, program.programId);
 			// console.log("lockup address:", lockup.toString());
 			const stakeTokenDecimals = 6;

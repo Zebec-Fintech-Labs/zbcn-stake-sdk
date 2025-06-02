@@ -52,14 +52,15 @@ describe("lookup table actions", () => {
 		const lookupTable = new PublicKey("C4R2sL6yj7bzKfbdfwCfH68DZZ3QnzdmedE9wQqTfAAA");
 
 		const addresses = [
-			// new web3.PublicKey("De31sBPcDejCVpZZh1fq8SNs7AcuWcBKuU3k2jqnkmKc"), // stake token
-			// new web3.PublicKey("5Rosz64MhKQEqDfnWU9pDTsjXZ6fMwryiLgTSGiXUbxU"), // lockup
-			// new web3.PublicKey("CxGWhBSj833PkjiJWhp3LiGMdQsqURkvCfigQ5Q4YNSK"), // admin
-			// new web3.PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"), // associated token program
-			// new web3.PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"), // token program
-			// new web3.PublicKey("11111111111111111111111111111111"), // system program
-			new PublicKey("EWXAHuP4VRL4twjiH4B1t3kiQFDjKcjdz1XPvnHM6kR3"), // lockup
-			new PublicKey("zSTKzGLiN6T6EVzhBiL6sjULXMahDavAS2p4R62afGv"), // stake program
+			// new PublicKey("De31sBPcDejCVpZZh1fq8SNs7AcuWcBKuU3k2jqnkmKc"), // stake token
+			// new PublicKey("5Rosz64MhKQEqDfnWU9pDTsjXZ6fMwryiLgTSGiXUbxU"), // lockup
+			// new PublicKey("CxGWhBSj833PkjiJWhp3LiGMdQsqURkvCfigQ5Q4YNSK"), // admin
+			// new PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"), // associated token program
+			// new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"), // token program
+			// new PublicKey("11111111111111111111111111111111"), // system program
+			// new PublicKey("EWXAHuP4VRL4twjiH4B1t3kiQFDjKcjdz1XPvnHM6kR3"), // lockup
+			// new PublicKey("zSTKzGLiN6T6EVzhBiL6sjULXMahDavAS2p4R62afGv"), // stake program
+			new PublicKey("DrxrMnUsyn5T6LRbnA1Zad4cYY6saSUSrhsdNJyJZyAN"),
 		];
 
 		// Create an instruction to extend a lookup table with the provided addresses
