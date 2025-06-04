@@ -513,7 +513,7 @@ export class StakeService {
 		};
 	}
 
-	async getAllStakesInfo(
+	async getAllStakesInfoOfUser(
 		userAdress: Address,
 		lockupAddress: Address,
 		options: {
@@ -586,17 +586,9 @@ export class StakeService {
 
 		const promises = stakeAccountsInfo.map((stakeInfo, index) =>
 			queue.add(async () => {
-				const signatures = await callWithEnhancedBackoff(async () =>
-					this.provider.connection.getSignaturesForAddress(translateAddress(stakeInfo.address), {}, "finalized"),
-				);
-
-				const stakeSignatures = signatures.filter((s) => {
-					return !s.err && (s.blockTime ?? 0) === stakeInfo.createdTime;
-				});
-
-				const signatureInfo = stakeSignatures[stakeSignatures.length - 1];
+				const signature = await this.getStakeSignatureForStake(stakeInfo);
 				stakesWithHash[index] = {
-					hash: signatureInfo ? signatureInfo.signature : "",
+					hash: signature ? signature : "",
 					...stakeInfo,
 				};
 			}),
@@ -607,7 +599,7 @@ export class StakeService {
 		return stakesWithHash;
 	}
 
-	async getTotalStakeCount(lockupAddress: Address) {
+	async getAllStakesCount(lockupAddress: Address) {
 		const dataSize = this.program.account.userStakeData.size;
 
 		const accountInfos = await this.provider.connection.getProgramAccounts(this.program.programId, {
@@ -630,6 +622,77 @@ export class StakeService {
 		});
 
 		return accountInfos.length;
+	}
+
+	async getStakeSignatureForStake(stakeInfo: StakeInfo) {
+		const signatures = await callWithEnhancedBackoff(async () =>
+			this.provider.connection.getSignaturesForAddress(translateAddress(stakeInfo.address), {}, "finalized"),
+		);
+
+		const stakeSignatures = signatures.filter((s) => {
+			return !s.err && (s.blockTime ?? 0) === stakeInfo.createdTime;
+		});
+
+		const signatureInfo = stakeSignatures[stakeSignatures.length - 1];
+
+		return signatureInfo ? signatureInfo.signature : null;
+	}
+
+	async getAllStakesInfo(lockupAddress: Address) {
+		const lockupAccount = await this.program.account.lockup.fetchNullable(
+			lockupAddress,
+			this.provider.connection.commitment,
+		);
+
+		if (!lockupAccount) {
+			throw new Error("Lockup account does not exists for address: " + lockupAddress);
+		}
+
+		const stakeTokenAddress = lockupAccount.stakedToken.tokenAddress;
+		const rewardTokenAddress = lockupAccount.rewardToken.tokenAddress;
+
+		const stakeTokenDecimals = await getMintDecimals(this.provider.connection, stakeTokenAddress);
+		const rewardTokenDecimals = await getMintDecimals(this.provider.connection, rewardTokenAddress);
+
+		const UNITS_PER_STAKE_TOKEN = TEN_BIGNUM.pow(stakeTokenDecimals);
+		const UNITS_PER_REWARD_TOKEN = TEN_BIGNUM.pow(rewardTokenDecimals);
+
+		const dataSize = this.program.account.userStakeData.size;
+
+		const accountInfos = await this.provider.connection.getProgramAccounts(this.program.programId, {
+			commitment: "finalized",
+			filters: [
+				{
+					dataSize,
+				},
+				{
+					memcmp: {
+						bytes: lockupAddress.toString(),
+						offset: 81,
+					},
+				},
+			],
+		});
+
+		return accountInfos.map((accountInfo) => {
+			const stakeAccount = this.program.coder.accounts.decode(
+				this.program.idl.accounts[2].name,
+				accountInfo.account.data,
+			);
+			const info: StakeInfo = {
+				address: accountInfo.pubkey.toString(),
+				nonce: BigInt(stakeAccount.nonce.toString()),
+				createdTime: stakeAccount.createdTime.toNumber(),
+				stakedAmount: BigNumber(stakeAccount.stakedAmount.toString()).div(UNITS_PER_STAKE_TOKEN).toFixed(),
+				rewardAmount: BigNumber(stakeAccount.rewardAmount.toString()).div(UNITS_PER_REWARD_TOKEN).toFixed(),
+				stakeClaimed: stakeAccount.stakeClaimed,
+				lockPeriod: stakeAccount.lockPeriod.toNumber(),
+				lockup: stakeAccount.lockup.toString(),
+				staker: stakeAccount.staker.toString(),
+			};
+
+			return info;
+		});
 	}
 }
 
