@@ -397,7 +397,7 @@ export class StakeService {
 		const rewardVault = deriveRewardVaultAddress(lockup, this.program.programId);
 		const stakeVault = deriveStakeVaultAddress(lockup, this.program.programId);
 
-		const stakerTokenAccount = getAssociatedTokenAddressSync(stakeToken, staker);
+		const stakerTokenAccount = getAssociatedTokenAddressSync(stakeToken, staker, true);
 
 		const instruction = await this.getUnstakeInstruction(
 			feeVault,
