@@ -21,10 +21,9 @@ yarn build
 To run specific test filess
 
 ```
-yarn test <test file path> -f "regex for test name"
-// example: 
+yarn test <test file path> -f "<regex for test name>"
+// example:
 // yarn test ./test/e2e/getLockupInfo.test.ts
-// yarn test ./test/e2e/whitelistStaker.test.ts -f "whitelistStakers"
 ```
 
 ## publish
