@@ -1042,6 +1042,24 @@ export type ZebecStake = {
 			discriminator: [105, 207, 3, 141, 114, 114, 232, 147];
 		},
 	];
+	events: [
+		{
+			name: "lockupInitialized";
+			discriminator: [137, 25, 165, 219, 184, 142, 188, 33];
+		},
+		{
+			name: "staked";
+			discriminator: [11, 146, 45, 205, 230, 58, 213, 240];
+		},
+		{
+			name: "stakerWhitelisted";
+			discriminator: [76, 149, 219, 17, 46, 17, 132, 62];
+		},
+		{
+			name: "unstaked";
+			discriminator: [27, 179, 156, 215, 47, 71, 195, 7];
+		},
+	];
 	errors: [
 		{
 			code: 6000;
@@ -1116,7 +1134,7 @@ export type ZebecStake = {
 		{
 			code: 6014;
 			name: "minimumStakeNotMet";
-			msg: "minimum Stake Not Met";
+			msg: "Minimum Stake Not Met";
 		},
 	];
 	types: [
@@ -1227,6 +1245,44 @@ export type ZebecStake = {
 			};
 		},
 		{
+			name: "lockupInitialized";
+			type: {
+				kind: "struct";
+				fields: [
+					{
+						name: "name";
+						type: "string";
+					},
+					{
+						name: "creator";
+						type: "pubkey";
+					},
+					{
+						name: "lockup";
+						type: "pubkey";
+					},
+					{
+						name: "feeVault";
+						type: "pubkey";
+					},
+					{
+						name: "rewardVault";
+						type: "pubkey";
+					},
+					{
+						name: "durationMap";
+						type: {
+							vec: {
+								defined: {
+									name: "durationMap";
+								};
+							};
+						};
+					},
+				];
+			};
+		},
+		{
 			name: "rewardToken";
 			type: {
 				kind: "struct";
@@ -1289,6 +1345,30 @@ export type ZebecStake = {
 			};
 		},
 		{
+			name: "staked";
+			type: {
+				kind: "struct";
+				fields: [
+					{
+						name: "staker";
+						type: "pubkey";
+					},
+					{
+						name: "stakeAmount";
+						type: "u64";
+					},
+					{
+						name: "nonce";
+						type: "u64";
+					},
+					{
+						name: "lockPeriod";
+						type: "i64";
+					},
+				];
+			};
+		},
+		{
 			name: "stakedToken";
 			type: {
 				kind: "struct";
@@ -1300,6 +1380,62 @@ export type ZebecStake = {
 					{
 						name: "totalStaked";
 						type: "u64";
+					},
+				];
+			};
+		},
+		{
+			name: "stakerWhitelisted";
+			type: {
+				kind: "struct";
+				fields: [
+					{
+						name: "staker";
+						type: "pubkey";
+					},
+					{
+						name: "amount";
+						type: "u64";
+					},
+					{
+						name: "nonce";
+						type: "u64";
+					},
+					{
+						name: "lockPeriod";
+						type: "i64";
+					},
+					{
+						name: "claimed";
+						type: "bool";
+					},
+					{
+						name: "createdTime";
+						type: "i64";
+					},
+				];
+			};
+		},
+		{
+			name: "unstaked";
+			type: {
+				kind: "struct";
+				fields: [
+					{
+						name: "staker";
+						type: "pubkey";
+					},
+					{
+						name: "unstakeAmount";
+						type: "u64";
+					},
+					{
+						name: "rewardAmount";
+						type: "u64";
+					},
+					{
+						name: "lockPeriod";
+						type: "i64";
 					},
 				];
 			};

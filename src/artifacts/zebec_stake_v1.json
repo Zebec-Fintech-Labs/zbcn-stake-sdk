@@ -616,6 +616,24 @@
 			"discriminator": [105, 207, 3, 141, 114, 114, 232, 147]
 		}
 	],
+	"events": [
+		{
+			"name": "LockupInitialized",
+			"discriminator": [137, 25, 165, 219, 184, 142, 188, 33]
+		},
+		{
+			"name": "Staked",
+			"discriminator": [11, 146, 45, 205, 230, 58, 213, 240]
+		},
+		{
+			"name": "StakerWhitelisted",
+			"discriminator": [76, 149, 219, 17, 46, 17, 132, 62]
+		},
+		{
+			"name": "Unstaked",
+			"discriminator": [27, 179, 156, 215, 47, 71, 195, 7]
+		}
+	],
 	"errors": [
 		{
 			"code": 6000,
@@ -690,7 +708,7 @@
 		{
 			"code": 6014,
 			"name": "MinimumStakeNotMet",
-			"msg": "minimum Stake Not Met"
+			"msg": "Minimum Stake Not Met"
 		}
 	],
 	"types": [
@@ -801,6 +819,44 @@
 			}
 		},
 		{
+			"name": "LockupInitialized",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "name",
+						"type": "string"
+					},
+					{
+						"name": "creator",
+						"type": "pubkey"
+					},
+					{
+						"name": "lockup",
+						"type": "pubkey"
+					},
+					{
+						"name": "fee_vault",
+						"type": "pubkey"
+					},
+					{
+						"name": "reward_vault",
+						"type": "pubkey"
+					},
+					{
+						"name": "duration_map",
+						"type": {
+							"vec": {
+								"defined": {
+									"name": "DurationMap"
+								}
+							}
+						}
+					}
+				]
+			}
+		},
+		{
 			"name": "RewardToken",
 			"type": {
 				"kind": "struct",
@@ -863,6 +919,30 @@
 			}
 		},
 		{
+			"name": "Staked",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "staker",
+						"type": "pubkey"
+					},
+					{
+						"name": "stake_amount",
+						"type": "u64"
+					},
+					{
+						"name": "nonce",
+						"type": "u64"
+					},
+					{
+						"name": "lock_period",
+						"type": "i64"
+					}
+				]
+			}
+		},
+		{
 			"name": "StakedToken",
 			"type": {
 				"kind": "struct",
@@ -874,6 +954,62 @@
 					{
 						"name": "total_staked",
 						"type": "u64"
+					}
+				]
+			}
+		},
+		{
+			"name": "StakerWhitelisted",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "staker",
+						"type": "pubkey"
+					},
+					{
+						"name": "amount",
+						"type": "u64"
+					},
+					{
+						"name": "nonce",
+						"type": "u64"
+					},
+					{
+						"name": "lock_period",
+						"type": "i64"
+					},
+					{
+						"name": "claimed",
+						"type": "bool"
+					},
+					{
+						"name": "created_time",
+						"type": "i64"
+					}
+				]
+			}
+		},
+		{
+			"name": "Unstaked",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "staker",
+						"type": "pubkey"
+					},
+					{
+						"name": "unstake_amount",
+						"type": "u64"
+					},
+					{
+						"name": "reward_amount",
+						"type": "u64"
+					},
+					{
+						"name": "lock_period",
+						"type": "i64"
 					}
 				]
 			}
