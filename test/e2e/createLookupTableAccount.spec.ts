@@ -49,7 +49,7 @@ describe("lookup table actions", () => {
 
 	it("extends address lookup table", async () => {
 		// const lookupTable = new web3.PublicKey("HCD4FqdYayUzUPSxSswPiEo4r7rPwd8KSvf3tqYB91SL");
-		const lookupTable = new PublicKey("C4R2sL6yj7bzKfbdfwCfH68DZZ3QnzdmedE9wQqTfAAA");
+		const lookupTable = new PublicKey("C4R2sL6yj7bzKfbdfwCfH68DZZ3QnzdmedE9wQqTfAAA"); // devnet
 
 		const addresses = [
 			// new PublicKey("De31sBPcDejCVpZZh1fq8SNs7AcuWcBKuU3k2jqnkmKc"), // stake token
@@ -58,9 +58,22 @@ describe("lookup table actions", () => {
 			// new PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"), // associated token program
 			// new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"), // token program
 			// new PublicKey("11111111111111111111111111111111"), // system program
-			// new PublicKey("EWXAHuP4VRL4twjiH4B1t3kiQFDjKcjdz1XPvnHM6kR3"), // lockup
 			// new PublicKey("zSTKzGLiN6T6EVzhBiL6sjULXMahDavAS2p4R62afGv"), // stake program
-			new PublicKey("DrxrMnUsyn5T6LRbnA1Zad4cYY6saSUSrhsdNJyJZyAN"),
+			// new PublicKey("DrxrMnUsyn5T6LRbnA1Zad4cYY6saSUSrhsdNJyJZyAN"), // lockup
+			// reward token
+			new PublicKey("85qTFUzp3t1e9Cc7b2mch6aLr8hQBp4UWbJrvxpuZmxt"), // stake vault
+			new PublicKey("4au4Q3amh3teocWEGCk3waqPHyXTvXR72n3sN7STkFtN"), // stake vault ata
+			new PublicKey("Axs2XYZFin5pFCu3K1TnhByVgR7K2bghKKUG9eCLHu6Q"), // reward vault
+			new PublicKey("4au4Q3amh3teocWEGCk3waqPHyXTvXR72n3sN7STkFtN"), // rewared vault ata
+			new PublicKey("AA8B8zv68QCT8pkJL9vd6nAG9MzopARH9xvY1CLgAQQQ"), // fee vault
+			new PublicKey("7YCpVsBaTxErZKow4LK77qzKNM3AUCUMS9MTp3WPZCKc"), // fee vault ata
+
+			// new PublicKey("EWXAHuP4VRL4twjiH4B1t3kiQFDjKcjdz1XPvnHM6kR3"), // lockup
+			// new PublicKey("AYbW5cbZEUgLEj6Eiy3yg74PU3YbEHkbFxgW6fjbSJjp"),
+			// new PublicKey("DWwty3vnpMWsJagibYWPNmJ2BGELHow4vKm5nK79btoC"),
+			// new PublicKey("7oKEHLFXbya57ZixovrDStQCxWpVJmisHszLSSiZXPdG"),
+			// new PublicKey("ZBCNpuD7YMXzTHB2fhGkGi78MNsHGLRXUhRewNRm9RU"),
+			// new PublicKey("zSTKzGLiN6T6EVzhBiL6sjULXMahDavAS2p4R62afGv"),
 		];
 
 		// Create an instruction to extend a lookup table with the provided addresses

@@ -4,15 +4,16 @@ import { getConnection, getWallets } from "../shared";
 
 describe("Fetch Lockup Info", () => {
 	const network = "devnet";
-	const connection = getConnection("devnet");
+	const connection = getConnection(network);
 	const wallets = getWallets(network);
-	const wallet = wallets[1];
+	const wallet = wallets[0];
 	const provider = createReadonlyProvider(connection, wallet.publicKey);
 
 	const service = new StakeServiceBuilder().setNetwork(network).setProvider(provider).setProgram().build();
 
 	describe("getLockupInfo()", () => {
 		it("fetch lockup information", async () => {
+			// const lockupName = "ZBCN Lockup";
 			const lockupName = "Lockup 002";
 			const lockup = deriveLockupAddress(lockupName, service.program.programId);
 			console.log("lockup address:", lockup.toString());

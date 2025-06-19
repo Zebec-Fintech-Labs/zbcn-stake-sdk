@@ -16,15 +16,13 @@ describe("Fetch All Stakes Info", () => {
 			const lockupName = "ZBCN Lockup";
 			const lockup = deriveLockupAddress(lockupName, service.program.programId);
 			// const staker = "5BQwQmwJGBkL4rVjPxbS8JofmEPG2gCPTvxFUwSWfkG8";
-			const staker = "99Ecn3r3f4sjPXrgSdXHYfR1VaEvmkWqZQ3VBoecJHRo";
+			// const staker = "99Ecn3r3f4sjPXrgSdXHYfR1VaEvmkWqZQ3VBoecJHRo";
 			// const staker = "Hnik4HYi7G7gsk72QFgJRK5aGRYzDcV79VuEGE8uz88R";
+			const staker = "7TRtTTBfG65LRxzFgRWFDdkcxjjryP6QLPFub3SuGbFu";
 			// const staker = wallet.publicKey;
 			const start = Date.now();
-			const infos = await service.getAllStakesInfo(lockup);
-			console.log(
-				"stake infos:",
-				infos.filter((info) => info.staker === "7TRtTTBfG65LRxzFgRWFDdkcxjjryP6QLPFub3SuGbFu"),
-			);
+			const infos = await service.getAllStakesInfoOfUser(staker, lockup, { maxConcurrent: 4, minDelayMs: 100 });
+			console.log("stake infos:", infos);
 			console.log("time elapsed: %d ms", Date.now() - start);
 		});
 	});

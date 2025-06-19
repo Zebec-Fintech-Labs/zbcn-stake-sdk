@@ -2,7 +2,7 @@ import { createAnchorProvider, RewardScheme, StakeServiceBuilder } from "../../s
 import { getConnection, getWallets } from "../shared";
 
 describe("Init Lockup", () => {
-	const network = "devnet";
+	const network = "mainnet-beta";
 	const connection = getConnection(network);
 	const wallets = getWallets(network);
 	const wallet = wallets[0];
@@ -13,29 +13,54 @@ describe("Init Lockup", () => {
 
 	describe("initLock()", () => {
 		it("initialize staking lock", async () => {
-			const rewardToken = "De31sBPcDejCVpZZh1fq8SNs7AcuWcBKuU3k2jqnkmKc";
-			const stakeToken = "De31sBPcDejCVpZZh1fq8SNs7AcuWcBKuU3k2jqnkmKc";
+			// const rewardToken = "De31sBPcDejCVpZZh1fq8SNs7AcuWcBKuU3k2jqnkmKc";
+			// const stakeToken = "De31sBPcDejCVpZZh1fq8SNs7AcuWcBKuU3k2jqnkmKc";
+			// const fee = 0;
+			// const feeVault = "AA8B8zv68QCT8pkJL9vd6nAG9MzopARH9xvY1CLgAQQQ";
+			// const name = "Lockup 002";
+			// const rewardSchemes: RewardScheme[] = [
+			// 	{
+			// 		// duration: 2592000, // 30 days
+			// 		duration: 30,
+			// 		rewardRate: "8",
+			// 	},
+			// 	{
+			// 		// duration: 7776000, // 90 days
+			// 		duration: 90,
+			// 		rewardRate: "12",
+			// 	},
+			// 	{
+			// 		// duration: 10368000, // 120 days
+			// 		duration: 120,
+			// 		rewardRate: "15",
+			// 	},
+			// ];
+			// const minimumStake = 0.000001;
+
+			/** mainnet-beta */
+			const rewardToken = "ZBCNpuD7YMXzTHB2fhGkGi78MNsHGLRXUhRewNRm9RU";
+			const stakeToken = "ZBCNpuD7YMXzTHB2fhGkGi78MNsHGLRXUhRewNRm9RU";
 			const fee = 0;
-			const feeVault = "AA8B8zv68QCT8pkJL9vd6nAG9MzopARH9xvY1CLgAQQQ";
-			const name = "Lockup 002";
+			const feeVault = "2Nz9xczcGaWvu5pZNzzXundLEdP5tf2aCAoWy4CGrjxD";
+			const name = "ZBCN Lockup";
 			const rewardSchemes: RewardScheme[] = [
 				{
-					// duration: 2592000, // 30 days
-					duration: 30,
+					duration: 2592000, // 30 days
+					// duration: 30,
 					rewardRate: "8",
 				},
 				{
-					// duration: 7776000, // 90 days
-					duration: 90,
+					duration: 7776000, // 90 days
+					// duration: 90,
 					rewardRate: "12",
 				},
 				{
-					// duration: 10368000, // 120 days
-					duration: 120,
+					duration: 10368000, // 120 days
+					// duration: 120,
 					rewardRate: "15",
 				},
 			];
-			const minimumStake = 0.000001;
+			const minimumStake = 0.1;
 
 			const payload = await service.initLockup({
 				rewardToken,

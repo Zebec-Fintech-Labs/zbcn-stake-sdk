@@ -20,11 +20,8 @@ describe("Fetch All Stakes Info", () => {
 			// const staker = "Hnik4HYi7G7gsk72QFgJRK5aGRYzDcV79VuEGE8uz88R";
 			// const staker = wallet.publicKey;
 			const start = Date.now();
-			const infos = await service.getAllStakesInfo(lockup);
-			console.log(
-				"stake infos:",
-				infos.filter((info) => info.staker === "7TRtTTBfG65LRxzFgRWFDdkcxjjryP6QLPFub3SuGbFu"),
-			);
+			const count = await service.getAllStakesCount(lockup);
+			console.log("stakes count:", count);
 			console.log("time elapsed: %d ms", Date.now() - start);
 		});
 	});

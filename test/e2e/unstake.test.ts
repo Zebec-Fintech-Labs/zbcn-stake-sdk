@@ -13,8 +13,8 @@ describe("Unstake", () => {
 
 	describe("unstake()", () => {
 		it("transfer token to lockup for staking", async () => {
-			const nonce = 8n;
-			const lockupName = "Lockup 001";
+			const nonce = 0n;
+			const lockupName = "Lockup 002";
 
 			const payload = await service.unstake({
 				nonce,

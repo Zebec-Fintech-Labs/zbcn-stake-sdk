@@ -34,7 +34,7 @@ interface RawStakeData {
 }
 
 describe("Whitelisting Stakers", () => {
-	const network = "devnet";
+	const network = "mainnet-beta";
 	const connection = getConnection(network);
 	const wallets = getWallets(network);
 	const wallet = wallets[0];
@@ -102,31 +102,31 @@ describe("Whitelisting Stakers", () => {
 	describe("whitelistStakers", () => {
 		it("whitelist stakers", async () => {
 			const file = fs.readFileSync(path.join(__dirname, "output.json"), "utf-8");
-			const data: StakeInfo[] = JSON.parse(file);
+			const data = JSON.parse(file);
 			assert(Array.isArray(data));
 
 			const chunkedArray = chunkArray(data, 5);
 			console.log("chunkedList length:", chunkedArray.length);
 
-			const stakeToken = "De31sBPcDejCVpZZh1fq8SNs7AcuWcBKuU3k2jqnkmKc";
-			const lockupName = "Lockup 002";
+			const stakeToken = "ZBCNpuD7YMXzTHB2fhGkGi78MNsHGLRXUhRewNRm9RU";
+			const lockupName = "ZBCN Lockup";
 			const lockup = deriveLockupAddress(lockupName, program.programId);
 			console.log("lockup address:", lockup.toString());
 			const stakeTokenDecimals = 6;
 			const UNITS_PER_TOKEN = 10 ** stakeTokenDecimals;
 
-			for (let i = 0; i < chunkedArray.length; i++) {
+			for (let i = 541; i < chunkedArray.length; i++) {
 				const chunk = chunkedArray[i];
 				console.log("chunk: %d, item count: %d", i, chunk.length);
 
 				const ixs = await Promise.all(
 					chunk.map(async (item) => {
 						const staker = item.wallet;
-						const createdTime = item.createdTime;
-						const lockPeriodInSeconds = item.lockPeriodInSeconds;
+						const createdTime = item.lockTime;
+						const lockPeriodInSeconds = item.lockDuration * SECONDS_IN_A_DAY;
 						const nonce = item.nonce;
 						const amount = item.amount;
-						const claimed = item.claimed;
+						const claimed = item.isRewardClaimed;
 
 						assert(typeof staker === "string");
 						assert(typeof amount === "number");
@@ -166,7 +166,7 @@ describe("Whitelisting Stakers", () => {
 					payerKey: wallet.publicKey,
 				});
 
-				const lookupTable = new PublicKey("C4R2sL6yj7bzKfbdfwCfH68DZZ3QnzdmedE9wQqTfAAA");
+				const lookupTable = new PublicKey("HCD4FqdYayUzUPSxSswPiEo4r7rPwd8KSvf3tqYB91SL");
 				const lookupTables = await connection.getAddressLookupTable(lookupTable);
 				const lookupTableAccount = lookupTables.value;
 				assert(lookupTableAccount, "Lookup table account not found");
@@ -193,21 +193,21 @@ describe("Whitelisting Stakers", () => {
 
 	describe("whitelistSingleStaker", () => {
 		it("whitelist single staker", async () => {
-			const stakeToken = "De31sBPcDejCVpZZh1fq8SNs7AcuWcBKuU3k2jqnkmKc";
-			const lockupName = "Lockup 002";
+			const stakeToken = "ZBCNpuD7YMXzTHB2fhGkGi78MNsHGLRXUhRewNRm9RU";
+			const lockupName = "ZBCN Lockup";
 			const lockup = deriveLockupAddress(lockupName, program.programId);
 			// console.log("lockup address:", lockup.toString());
 			const stakeTokenDecimals = 6;
 			const UNITS_PER_TOKEN = 10 ** stakeTokenDecimals;
 
-			const staker = "5BQwQmwJGBkL4rVjPxbS8JofmEPG2gCPTvxFUwSWfkG8";
+			const staker = "6YFdKpTVE5wKtbeEYuuofUnqFTaqx4ETiNow6R2TPYdN";
 			// const staker = wallets[2].publicKey.toString();
 			console.log("staker:", staker);
-			const nonce = 9;
-			const amount = 1000;
+			const nonce = 1;
+			const amount = 3657862.284775257;
 			const claimed = false;
-			const createdTime = Math.floor(Date.now() / 1000); // Current time in seconds
-			const lockPeriodInSeconds = 120;
+			const createdTime = 1745639531;
+			const lockPeriodInSeconds = 30 * SECONDS_IN_A_DAY;
 
 			const amountInUnits = BigNumber(amount).times(UNITS_PER_TOKEN).toFixed(0);
 			const stakePda = deriveStakeAddress(staker, lockup, BigInt(nonce), program.programId);
@@ -235,7 +235,7 @@ describe("Whitelisting Stakers", () => {
 				payerKey: wallet.publicKey,
 			});
 
-			const lookupTable = new PublicKey("C4R2sL6yj7bzKfbdfwCfH68DZZ3QnzdmedE9wQqTfAAA");
+			const lookupTable = new PublicKey("HCD4FqdYayUzUPSxSswPiEo4r7rPwd8KSvf3tqYB91SL");
 			const lookupTables = await connection.getAddressLookupTable(lookupTable);
 			const lookupTableAccount = lookupTables.value;
 			assert(lookupTableAccount, "Lookup table account not found");

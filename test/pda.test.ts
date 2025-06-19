@@ -4,7 +4,7 @@ import { deriveLockupAddress, deriveRewardVaultAddress, deriveStakeVaultAddress,
 
 describe("PDAs derive functions", () => {
 	it("derive pdas", () => {
-		const lockupName = "Lockup 002";
+		const lockupName = "ZBCN Lockup";
 		const lockupAddress = deriveLockupAddress(lockupName, ZEBEC_STAKE_PROGRAM.devnet);
 		console.log("lockup:", lockupAddress.toString());
 
