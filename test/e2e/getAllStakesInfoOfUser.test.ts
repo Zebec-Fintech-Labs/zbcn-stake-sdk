@@ -25,5 +25,5 @@ describe("Fetch All Stakes Info", () => {
 			console.log("stake infos:", infos);
 			console.log("time elapsed: %d ms", Date.now() - start);
 		});
-	});
+	});	
 });

@@ -1,6 +1,12 @@
-import { createReadonlyProvider, StakeServiceBuilder } from "../../src";
+import {
+	createReadonlyProvider,
+	StakeServiceBuilder,
+} from "../../src";
 import { deriveLockupAddress } from "../../src/pda";
-import { getConnection, getWallets } from "../shared";
+import {
+	getConnection,
+	getWallets,
+} from "../shared";
 
 describe("Fetch All Stakes Info", () => {
 	const network = "devnet";
@@ -15,7 +21,7 @@ describe("Fetch All Stakes Info", () => {
 		it("fetch all stakes information of a user", async () => {
 			const lockupName = "Lockup 001";
 			const lockup = deriveLockupAddress(lockupName, service.program.programId);
-			const infos = await service.getTotalStakeCount(lockup);
+			const infos = await service.getAllStakesCount(lockup);
 
 			console.log("stake infos:", infos);
 		});

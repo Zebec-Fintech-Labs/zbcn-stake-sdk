@@ -1,7 +1,13 @@
 import { StakeServiceBuilder } from "../../src";
-import { deriveLockupAddress, deriveUserNonceAddress } from "../../src/pda";
+import {
+	deriveLockupAddress,
+	deriveUserNonceAddress,
+} from "../../src/pda";
 import { createAnchorProvider } from "../../src/providers";
-import { getConnection, getWallets } from "../shared";
+import {
+	getConnection,
+	getWallets,
+} from "../shared";
 
 describe("Stake", () => {
 	const network = "devnet";
@@ -14,7 +20,7 @@ describe("Stake", () => {
 
 	describe("stake()", () => {
 		it("transfer token to lockup for staking", async () => {
-			const amount = 1000;
+			const amount = 100;
 			const lockPeriod = 30; // sec
 			const lockupName = "Lockup 002";
 			const lockup = deriveLockupAddress(lockupName, service.program.programId);
