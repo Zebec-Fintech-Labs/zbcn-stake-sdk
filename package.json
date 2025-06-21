@@ -1,6 +1,6 @@
 {
   "name": "@zebec-network/zebec-stake-sdk",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "An SDK for zebec network stake solana program",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -26,14 +26,14 @@
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",
     "@solana/web3.js": "1.98.2",
-    "@types/bn.js": "^5.1.6",
     "@zebec-network/core-utils": "^1.0.4",
-    "@zebec-network/solana-common": "^1.2.6",
+    "@zebec-network/solana-common": "^1.5.0",
     "bignumber.js": "^9.3.0",
     "buffer": "^6.0.3",
     "dotenv": "^16.5.0"
   },
   "devDependencies": {
+    "@types/bn.js": "^5.1.6",
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.14.1",
     "mocha": "^11.1.0",
