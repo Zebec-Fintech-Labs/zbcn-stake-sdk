@@ -1,7 +1,7 @@
 import assert from "assert";
 import { describe } from "mocha";
 
-import { RateLimitedQueue } from "../src/rateLimitQueue";
+import { RateLimitedQueue } from "../../src";
 
 // Test utilities
 // Test utilities
