@@ -6,14 +6,15 @@ import { Cluster, clusterApiUrl, Connection, Keypair, Transaction, VersionedTran
 
 dotenv.config();
 
-export function getConnection(cluster?: Cluster) {
-	if (!cluster || cluster === "mainnet-beta") {
-		const RPC_URL = process.env.RPC_URL;
-		assert(RPC_URL && RPC_URL !== "", "missing env var: RPC_URL");
-		return new Connection(RPC_URL);
-	}
+export function getConnection(cluster?: "mainnet-beta" | "devnet",
+	commitment: "confirmed" | "finalized" = "finalized",) 
 
-	return new Connection(clusterApiUrl(cluster));
+{
+	const network = cluster ? cluster : "mainnet-beta";
+	const RPC_URL = network === "devnet" ? process.env.DEVNET_RPC_URL : process.env.RPC_URL;
+	assert(RPC_URL && RPC_URL !== "", `missing env var: ${network === "devnet" ? "DEVNET_RPC_URL" : "RPC_URL"}`);
+
+	return new Connection(RPC_URL, commitment);
 }
 
 export async function sleep(ms: number) {
