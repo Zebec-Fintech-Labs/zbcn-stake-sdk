@@ -13,8 +13,8 @@ import {
 	deriveStakeAddress,
 	ZEBEC_STAKE_IDL_V1,
 	ZebecStakeIdlV1,
-} from "../../src";
-import { chunkArray, getConnection, getWallets } from "../shared";
+} from "../src";
+import { chunkArray, getConnection, getWallets } from "./shared";
 
 interface StakeInfo {
 	wallet: string;
