@@ -3,7 +3,7 @@ import { deriveLockupAddress, deriveStakeAddress } from "../../src/pda";
 import { getConnection, getWallets } from "../shared";
 
 describe("Fetch Stake Info", () => {
-	const network = "mainnet-beta";
+	const network = "devnet";
 	const connection = getConnection(network);
 	const wallets = getWallets(network);
 	const wallet = wallets[2];

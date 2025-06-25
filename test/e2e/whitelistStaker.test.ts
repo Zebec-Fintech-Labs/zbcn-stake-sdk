@@ -34,7 +34,7 @@ interface RawStakeData {
 }
 
 describe("Whitelisting Stakers", () => {
-	const network = "mainnet-beta";
+	const network = "devnet";
 	const connection = getConnection(network);
 	const wallets = getWallets(network);
 	const wallet = wallets[0];

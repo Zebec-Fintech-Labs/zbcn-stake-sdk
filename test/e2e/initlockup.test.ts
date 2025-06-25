@@ -2,7 +2,7 @@ import { createAnchorProvider, RewardScheme, StakeServiceBuilder } from "../../s
 import { getConnection, getWallets } from "../shared";
 
 describe("Init Lockup", () => {
-	const network = "mainnet-beta";
+	const network = "devnet";
 	const connection = getConnection(network);
 	const wallets = getWallets(network);
 	const wallet = wallets[0];

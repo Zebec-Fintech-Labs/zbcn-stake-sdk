@@ -2,12 +2,13 @@ import assert from "assert";
 import dotenv from "dotenv";
 
 import { AnchorProvider, utils, Wallet } from "@coral-xyz/anchor";
-import { Cluster, clusterApiUrl, Connection, Keypair, Transaction, VersionedTransaction } from "@solana/web3.js";
+import { Cluster, Connection, Keypair, Transaction, VersionedTransaction } from "@solana/web3.js";
 
 dotenv.config();
 
 export function getConnection(cluster?: "mainnet-beta" | "devnet",
-	commitment: "confirmed" | "finalized" = "finalized",) 
+	commitment: "confirmed" | "finalized" = "finalized",
+) 
 
 {
 	const network = cluster ? cluster : "mainnet-beta";
