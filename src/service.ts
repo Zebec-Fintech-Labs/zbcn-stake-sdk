@@ -6,6 +6,7 @@ import {
 	AddressLookupTableAccount,
 	clusterApiUrl,
 	Connection,
+	Finality,
 	PublicKey,
 	Signer,
 	TransactionInstruction,
@@ -171,7 +172,7 @@ export class StakeService {
 		}
 
 		return new TransactionPayload(
-			this.provider.connection,
+			this.connection,
 			errorMap,
 			instructions,
 			payerKey,
@@ -272,7 +273,7 @@ export class StakeService {
 		const rewardToken = translateAddress(params.rewardToken);
 		const feeVault = translateAddress(params.feeVault);
 
-		const stakeTokenDecimals = await getMintDecimals(this.provider.connection, stakeToken);
+		const stakeTokenDecimals = await getMintDecimals(this.connection, stakeToken);
 		const UNITS_PER_STAKE_TOKEN = TEN_BIGNUM.pow(stakeTokenDecimals);
 		const rewardSchemes = params.rewardSchemes.map<ParsedRewardScheme>((value) => {
 			return {
@@ -281,9 +282,9 @@ export class StakeService {
 			};
 		});
 
-		const lockup = deriveLockupAddress(params.name, this.program.programId);
-		const rewardVault = deriveRewardVaultAddress(lockup, this.program.programId);
-		const stakeVault = deriveStakeVaultAddress(lockup, this.program.programId);
+		const lockup = deriveLockupAddress(params.name, this.programId);
+		const rewardVault = deriveRewardVaultAddress(lockup, this.programId);
+		const stakeVault = deriveStakeVaultAddress(lockup, this.programId);
 
 		const fee = new BN(BigNumber(params.fee).times(UNITS_PER_STAKE_TOKEN).toFixed(0));
 		const minimumStake = new BN(BigNumber(params.minimumStake).times(UNITS_PER_STAKE_TOKEN).toFixed(0));
@@ -320,9 +321,9 @@ export class StakeService {
 			throw new Error("MissingArgument: Please provide either staker address or publicKey in provider");
 		}
 
-		const lockup = deriveLockupAddress(params.lockupName, this.program.programId);
+		const lockup = deriveLockupAddress(params.lockupName, this.programId);
 
-		const lockupAccount = await this.program.account.lockup.fetchNullable(lockup, this.provider.connection.commitment);
+		const lockupAccount = await this.program.account.lockup.fetchNullable(lockup, this.connection.commitment);
 
 		if (!lockupAccount) {
 			throw new Error("Lockup account does not exists for address: " + lockup);
@@ -336,23 +337,20 @@ export class StakeService {
 		}
 
 		const stakeToken = lockupAccount.stakedToken.tokenAddress;
-		const stakeVault = deriveStakeVaultAddress(lockup, this.program.programId);
-		const userNonce = deriveUserNonceAddress(staker, lockup, this.program.programId);
+		const stakeVault = deriveStakeVaultAddress(lockup, this.programId);
+		const userNonce = deriveUserNonceAddress(staker, lockup, this.programId);
 
-		const userNonceAccount = await this.program.account.userNonce.fetchNullable(
-			userNonce,
-			this.provider.connection.commitment,
-		);
+		const userNonceAccount = await this.program.account.userNonce.fetchNullable(userNonce, this.connection.commitment);
 
 		let nonce = BigInt(0);
 		if (userNonceAccount) {
 			nonce = BigInt(userNonceAccount.nonce.toString());
 		}
 
-		const stakePda = deriveStakeAddress(staker, lockup, nonce, this.program.programId);
+		const stakePda = deriveStakeAddress(staker, lockup, nonce, this.programId);
 		const stakeVaultTokenAccount = getAssociatedTokenAddressSync(stakeToken, stakeVault, true);
 
-		const stakeTokenDecimals = await getMintDecimals(this.provider.connection, stakeToken);
+		const stakeTokenDecimals = await getMintDecimals(this.connection, stakeToken);
 
 		const UNITS_PER_STAKE_TOKEN = TEN_BIGNUM.pow(stakeTokenDecimals);
 
@@ -381,9 +379,9 @@ export class StakeService {
 			throw new Error("MissingArgument: Please provide either staker address or publicKey in provider");
 		}
 
-		const lockup = deriveLockupAddress(params.lockupName, this.program.programId);
+		const lockup = deriveLockupAddress(params.lockupName, this.programId);
 
-		const lockupAccount = await this.program.account.lockup.fetchNullable(lockup, this.provider.connection.commitment);
+		const lockupAccount = await this.program.account.lockup.fetchNullable(lockup, this.connection.commitment);
 
 		if (!lockupAccount) {
 			throw new Error("Lockup account does not exists for address: " + lockup);
@@ -393,9 +391,9 @@ export class StakeService {
 		const rewardToken = lockupAccount.rewardToken.tokenAddress;
 		const feeVault = lockupAccount.feeInfo.feeVault;
 
-		const stakePda = deriveStakeAddress(staker, lockup, params.nonce, this.program.programId);
-		const rewardVault = deriveRewardVaultAddress(lockup, this.program.programId);
-		const stakeVault = deriveStakeVaultAddress(lockup, this.program.programId);
+		const stakePda = deriveStakeAddress(staker, lockup, params.nonce, this.programId);
+		const rewardVault = deriveRewardVaultAddress(lockup, this.programId);
+		const stakeVault = deriveStakeVaultAddress(lockup, this.programId);
 
 		const stakerTokenAccount = getAssociatedTokenAddressSync(stakeToken, staker, true);
 
@@ -416,10 +414,7 @@ export class StakeService {
 	}
 
 	async getLockupInfo(lockupAddress: Address): Promise<LockupInfo | null> {
-		const lockupAccount = await this.program.account.lockup.fetchNullable(
-			lockupAddress,
-			this.provider.connection.commitment,
-		);
+		const lockupAccount = await this.program.account.lockup.fetchNullable(lockupAddress, this.connection.commitment);
 
 		if (!lockupAccount) {
 			return null;
@@ -427,7 +422,7 @@ export class StakeService {
 
 		const stakeTokenAddress = lockupAccount.stakedToken.tokenAddress;
 
-		const stakeTokenDecimals = await getMintDecimals(this.provider.connection, stakeTokenAddress);
+		const stakeTokenDecimals = await getMintDecimals(this.connection, stakeTokenAddress);
 
 		const UNITS_PER_STAKE_TOKEN = TEN_BIGNUM.pow(stakeTokenDecimals);
 
@@ -457,10 +452,7 @@ export class StakeService {
 	}
 
 	async getStakeInfo(stakeAddress: Address, lockupAddress: Address): Promise<StakeInfo | null> {
-		const lockupAccount = await this.program.account.lockup.fetchNullable(
-			lockupAddress,
-			this.provider.connection.commitment,
-		);
+		const lockupAccount = await this.program.account.lockup.fetchNullable(lockupAddress, this.connection.commitment);
 
 		if (!lockupAccount) {
 			throw new Error("Lockup account does not exists for address: " + lockupAddress);
@@ -469,15 +461,15 @@ export class StakeService {
 		const stakeTokenAddress = lockupAccount.stakedToken.tokenAddress;
 		const rewardTokenAddress = lockupAccount.rewardToken.tokenAddress;
 
-		const stakeTokenDecimals = await getMintDecimals(this.provider.connection, stakeTokenAddress);
-		const rewardTokenDecimals = await getMintDecimals(this.provider.connection, rewardTokenAddress);
+		const stakeTokenDecimals = await getMintDecimals(this.connection, stakeTokenAddress);
+		const rewardTokenDecimals = await getMintDecimals(this.connection, rewardTokenAddress);
 
 		const UNITS_PER_STAKE_TOKEN = TEN_BIGNUM.pow(stakeTokenDecimals);
 		const UNITS_PER_REWARD_TOKEN = TEN_BIGNUM.pow(rewardTokenDecimals);
 
 		const stakeAccount = await this.program.account.userStakeData.fetchNullable(
 			stakeAddress,
-			this.provider.connection.commitment,
+			this.connection.commitment,
 		);
 
 		if (!stakeAccount) {
@@ -500,7 +492,7 @@ export class StakeService {
 	async getUserNonceInfo(userNonceAddress: Address): Promise<UserNonceInfo | null> {
 		const userNonceAccount = await this.program.account.userNonce.fetchNullable(
 			userNonceAddress,
-			this.provider.connection.commitment,
+			this.connection.commitment,
 		);
 
 		if (!userNonceAccount) {
@@ -521,10 +513,7 @@ export class StakeService {
 			maxConcurrent?: number;
 		} = {},
 	) {
-		const lockupAccount = await this.program.account.lockup.fetchNullable(
-			lockupAddress,
-			this.provider.connection.commitment,
-		);
+		const lockupAccount = await this.program.account.lockup.fetchNullable(lockupAddress, this.connection.commitment);
 
 		if (!lockupAccount) {
 			throw new Error("Lockup account does not exists for address: " + lockupAddress);
@@ -533,16 +522,16 @@ export class StakeService {
 		const stakeTokenAddress = lockupAccount.stakedToken.tokenAddress;
 		const rewardTokenAddress = lockupAccount.rewardToken.tokenAddress;
 
-		const stakeTokenDecimals = await getMintDecimals(this.provider.connection, stakeTokenAddress);
-		const rewardTokenDecimals = await getMintDecimals(this.provider.connection, rewardTokenAddress);
+		const stakeTokenDecimals = await getMintDecimals(this.connection, stakeTokenAddress);
+		const rewardTokenDecimals = await getMintDecimals(this.connection, rewardTokenAddress);
 
 		const UNITS_PER_STAKE_TOKEN = TEN_BIGNUM.pow(stakeTokenDecimals);
 		const UNITS_PER_REWARD_TOKEN = TEN_BIGNUM.pow(rewardTokenDecimals);
 
-		const userNonceAddress = deriveUserNonceAddress(userAdress, lockupAddress, this.program.programId);
+		const userNonceAddress = deriveUserNonceAddress(userAdress, lockupAddress, this.programId);
 		const userNonceAccount = await this.program.account.userNonce.fetchNullable(
 			userNonceAddress,
-			this.provider.connection.commitment,
+			this.connection.commitment,
 		);
 
 		if (!userNonceAccount) {
@@ -553,12 +542,10 @@ export class StakeService {
 
 		const nonces = Array.from({ length: currentNonce }, (_, i) => BigInt(i));
 
-		const stakeAddresses = nonces.map((nonce) =>
-			deriveStakeAddress(userAdress, lockupAddress, nonce, this.program.programId),
-		);
+		const stakeAddresses = nonces.map((nonce) => deriveStakeAddress(userAdress, lockupAddress, nonce, this.programId));
 
-		const accountInfos = await this.provider.connection.getMultipleAccountsInfo(stakeAddresses, {
-			commitment: "finalized",
+		const accountInfos = await this.connection.getMultipleAccountsInfo(stakeAddresses, {
+			commitment: this.connection.commitment,
 		});
 
 		const stakeAccountsInfo = accountInfos.map((value, i) => {
@@ -602,8 +589,8 @@ export class StakeService {
 	async getAllStakesCount(lockupAddress: Address) {
 		const dataSize = this.program.account.userStakeData.size;
 
-		const accountInfos = await this.provider.connection.getProgramAccounts(this.program.programId, {
-			commitment: "finalized",
+		const accountInfos = await this.connection.getProgramAccounts(this.programId, {
+			commitment: this.connection.commitment,
 			dataSlice: {
 				length: 0,
 				offset: 0,
@@ -625,8 +612,10 @@ export class StakeService {
 	}
 
 	async getStakeSignatureForStake(stakeInfo: StakeInfo) {
+		const commitment: Finality = this.connection.commitment === "finalized" ? "finalized" : "confirmed";
+
 		const signatures = await callWithEnhancedBackoff(async () =>
-			this.provider.connection.getSignaturesForAddress(translateAddress(stakeInfo.address), {}, "finalized"),
+			this.connection.getSignaturesForAddress(translateAddress(stakeInfo.address), {}, commitment),
 		);
 
 		const stakeSignatures = signatures.filter((s) => {
@@ -639,10 +628,7 @@ export class StakeService {
 	}
 
 	async getAllStakesInfo(lockupAddress: Address) {
-		const lockupAccount = await this.program.account.lockup.fetchNullable(
-			lockupAddress,
-			this.provider.connection.commitment,
-		);
+		const lockupAccount = await this.program.account.lockup.fetchNullable(lockupAddress, this.connection.commitment);
 
 		if (!lockupAccount) {
 			throw new Error("Lockup account does not exists for address: " + lockupAddress);
@@ -651,15 +637,15 @@ export class StakeService {
 		const stakeTokenAddress = lockupAccount.stakedToken.tokenAddress;
 		const rewardTokenAddress = lockupAccount.rewardToken.tokenAddress;
 
-		const stakeTokenDecimals = await getMintDecimals(this.provider.connection, stakeTokenAddress);
-		const rewardTokenDecimals = await getMintDecimals(this.provider.connection, rewardTokenAddress);
+		const stakeTokenDecimals = await getMintDecimals(this.connection, stakeTokenAddress);
+		const rewardTokenDecimals = await getMintDecimals(this.connection, rewardTokenAddress);
 
 		const UNITS_PER_STAKE_TOKEN = TEN_BIGNUM.pow(stakeTokenDecimals);
 		const UNITS_PER_REWARD_TOKEN = TEN_BIGNUM.pow(rewardTokenDecimals);
 
 		const dataSize = this.program.account.userStakeData.size;
 
-		const accountInfos = await this.provider.connection.getProgramAccounts(this.program.programId, {
+		const accountInfos = await this.connection.getProgramAccounts(this.programId, {
 			commitment: "finalized",
 			filters: [
 				{
@@ -693,6 +679,14 @@ export class StakeService {
 
 			return info;
 		});
+	}
+
+	get programId(): PublicKey {
+		return this.program.programId;
+	}
+
+	get connection(): Connection {
+		return this.provider.connection;
 	}
 }
 

@@ -13,8 +13,8 @@ import {
 	deriveStakeAddress,
 	ZEBEC_STAKE_IDL_V1,
 	ZebecStakeIdlV1,
-} from "../../src";
-import { chunkArray, getConnection, getWallets } from "../shared";
+} from "../src";
+import { chunkArray, getConnection, getWallets } from "./shared";
 
 interface StakeInfo {
 	wallet: string;
@@ -34,7 +34,7 @@ interface RawStakeData {
 }
 
 describe("Whitelisting Stakers", () => {
-	const network = "mainnet-beta";
+	const network = "devnet";
 	const connection = getConnection(network);
 	const wallets = getWallets(network);
 	const wallet = wallets[0];

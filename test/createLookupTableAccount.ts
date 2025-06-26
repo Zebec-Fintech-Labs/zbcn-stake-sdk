@@ -3,7 +3,7 @@ import { describe } from "mocha";
 import { web3 } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 
-import { getConnection, getWallets } from "../shared";
+import { getConnection, getWallets } from "./shared";
 
 describe("lookup table actions", () => {
 	const network = "devnet";

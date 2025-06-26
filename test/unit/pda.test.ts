@@ -1,6 +1,6 @@
 import { describe } from "mocha";
 
-import { deriveLockupAddress, deriveRewardVaultAddress, deriveStakeVaultAddress, ZEBEC_STAKE_PROGRAM } from "../src";
+import { deriveLockupAddress, deriveRewardVaultAddress, deriveStakeVaultAddress, ZEBEC_STAKE_PROGRAM } from "../../src";
 
 describe("PDAs derive functions", () => {
 	it("derive pdas", () => {

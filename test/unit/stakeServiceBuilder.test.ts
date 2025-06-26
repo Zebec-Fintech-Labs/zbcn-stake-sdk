@@ -2,12 +2,12 @@ import assert from "assert";
 
 import { Program } from "@coral-xyz/anchor";
 
-import { StakeService, StakeServiceBuilder, ZEBEC_STAKE_IDL_V1 } from "../src";
-import { createAnchorProvider, createReadonlyProvider } from "../src/providers";
-import { getConnection, getWallets } from "./shared";
+import { StakeService, StakeServiceBuilder, ZEBEC_STAKE_IDL_V1 } from "../../src";
+import { createAnchorProvider, createReadonlyProvider } from "../../src/providers";
+import { getConnection, getWallets } from "../shared";
 
 const network = "devnet";
-const connection = getConnection("devnet");
+const connection = getConnection("devnet", "confirmed");
 const wallets = getWallets(network);
 const wallet = wallets[0];
 

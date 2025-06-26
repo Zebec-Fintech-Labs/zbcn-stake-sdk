@@ -2,18 +2,19 @@ import assert from "assert";
 import dotenv from "dotenv";
 
 import { AnchorProvider, utils, Wallet } from "@coral-xyz/anchor";
-import { Cluster, clusterApiUrl, Connection, Keypair, Transaction, VersionedTransaction } from "@solana/web3.js";
+import { Cluster, Commitment, Connection, Keypair, Transaction, VersionedTransaction } from "@solana/web3.js";
 
 dotenv.config();
 
-export function getConnection(cluster?: Cluster) {
-	if (!cluster || cluster === "mainnet-beta") {
-		const RPC_URL = process.env.RPC_URL;
-		assert(RPC_URL && RPC_URL !== "", "missing env var: RPC_URL");
-		return new Connection(RPC_URL);
-	}
+export function getConnection(
+	cluster?: "mainnet-beta" | "devnet",
+	commitment: "confirmed" | "finalized" = "finalized",
+) {
+	const network = cluster ? cluster : "mainnet-beta";
+	const RPC_URL = network === "devnet" ? process.env.DEVNET_RPC_URL : process.env.RPC_URL;
+	assert(RPC_URL && RPC_URL !== "", `missing env var: ${network === "devnet" ? "DEVNET_RPC_URL" : "RPC_URL"}`);
 
-	return new Connection(clusterApiUrl(cluster));
+	return new Connection(RPC_URL, commitment);
 }
 
 export async function sleep(ms: number) {
@@ -24,7 +25,11 @@ export function getWallets(cluster?: Cluster) {
 	const SECRET_KEYS =
 		cluster && cluster === "mainnet-beta" ? process.env.MAINNET_SECRET_KEYS : process.env.DEVNET_SECRET_KEYS;
 
-	assert(SECRET_KEYS && SECRET_KEYS != "", "missing env var: SECRET_KEYS");
+	assert(
+		SECRET_KEYS && SECRET_KEYS != "",
+		`missing env var: ${cluster === "mainnet-beta" ? "MAINNET_SECRET_KEYS" : "DEVNET_SECRET_KEYS"}`,
+	);
+
 	const keypairs: Keypair[] = [];
 	try {
 		const secretKeys = JSON.parse(SECRET_KEYS);
@@ -80,4 +85,9 @@ export function chunkArray<T>(arr: T[], size: number): T[][] {
 	}
 
 	return result;
+}
+
+export async function getBlockTime(connection: Connection, commitment: Commitment) {
+	const time = await connection.getBlockTime(await connection.getSlot(commitment));
+	return time!;
 }
