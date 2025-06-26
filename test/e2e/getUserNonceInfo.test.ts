@@ -1,3 +1,5 @@
+import assert from "assert";
+
 import { createReadonlyProvider, StakeServiceBuilder } from "../../src";
 import { deriveLockupAddress, deriveUserNonceAddress } from "../../src/pda";
 import { getConnection, getWallets } from "../shared";
@@ -17,6 +19,12 @@ describe("Fetch User Nonce Info", () => {
 			const lockup = deriveLockupAddress(lockupName, service.program.programId);
 			const userNonce = deriveUserNonceAddress(wallet.publicKey, lockup, service.program.programId);
 			const info = await service.getUserNonceInfo(userNonce);
+
+			if (info) {
+				assert("address" in info);
+				assert("nonce" in info);
+				assert.strictEqual(userNonce.toString(), info.address, "UserNonceAddress does not match");
+			}
 
 			console.log("user nonce info:", info);
 		});
