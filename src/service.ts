@@ -682,7 +682,7 @@ export class StakeService {
 	}
 
 	get programId(): PublicKey {
-		return this.programId;
+		return this.program.programId;
 	}
 
 	get connection(): Connection {
