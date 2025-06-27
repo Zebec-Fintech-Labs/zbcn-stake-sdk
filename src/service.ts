@@ -30,7 +30,7 @@ import {
 } from "./pda";
 import { createReadonlyProvider, ReadonlyProvider } from "./providers";
 import { RateLimitedQueue } from "./rateLimitQueue";
-import { callWithEnhancedBackoff } from "./utils";
+import { callWithEnhancedBackoff, chunkArray } from "./utils";
 
 type ProgramCreateFunction = (provider: ReadonlyProvider | AnchorProvider) => Program<ZebecStakeIdlV1>;
 
@@ -544,46 +544,54 @@ export class StakeService {
 
 		const stakeAddresses = nonces.map((nonce) => deriveStakeAddress(userAdress, lockupAddress, nonce, this.programId));
 
-		const accountInfos = await this.connection.getMultipleAccountsInfo(stakeAddresses, {
-			commitment: this.connection.commitment,
-		});
+		const stakeAddressesChunks = chunkArray(stakeAddresses, 100);
 
-		const stakeAccountsInfo = accountInfos.map((value, i) => {
-			assert(value, "Account does not exists for stake address: " + stakeAddresses[i] + " at nonce: " + nonces[i]);
-			const stakeAccount = this.program.coder.accounts.decode(this.program.idl.accounts[2].name, value.data);
-			const info: StakeInfo = {
-				address: stakeAddresses[i].toString(),
-				nonce: BigInt(stakeAccount.nonce.toString()),
-				createdTime: stakeAccount.createdTime.toNumber(),
-				stakedAmount: BigNumber(stakeAccount.stakedAmount.toString()).div(UNITS_PER_STAKE_TOKEN).toFixed(),
-				rewardAmount: BigNumber(stakeAccount.rewardAmount.toString()).div(UNITS_PER_REWARD_TOKEN).toFixed(),
-				stakeClaimed: stakeAccount.stakeClaimed,
-				lockPeriod: stakeAccount.lockPeriod.toNumber(),
-				lockup: stakeAccount.lockup.toString(),
-				staker: stakeAccount.staker.toString(),
-			};
+		let stakeWithHash2D: StakeInfoWithHash[][] = [];
 
-			return info;
-		});
+		for (const stakeAddresses of stakeAddressesChunks) {
+			const accountInfos = await this.connection.getMultipleAccountsInfo(stakeAddresses, {
+				commitment: this.connection.commitment,
+			});
 
-		let stakesWithHash: StakeInfoWithHash[] = new Array(stakeAccountsInfo.length);
-
-		const { maxConcurrent = 3, minDelayMs = 400 } = options;
-		const queue = new RateLimitedQueue(maxConcurrent, minDelayMs); // Max 3 concurrent, 300ms between requests
-
-		const promises = stakeAccountsInfo.map((stakeInfo, index) =>
-			queue.add(async () => {
-				const signature = await this.getStakeSignatureForStake(stakeInfo);
-				stakesWithHash[index] = {
-					hash: signature ? signature : "",
-					...stakeInfo,
+			const stakeAccountsInfo = accountInfos.map((value, i) => {
+				assert(value, "Account does not exists for stake address: " + stakeAddresses[i] + " at nonce: " + nonces[i]);
+				const stakeAccount = this.program.coder.accounts.decode(this.program.idl.accounts[2].name, value.data);
+				const info: StakeInfo = {
+					address: stakeAddresses[i].toString(),
+					nonce: BigInt(stakeAccount.nonce.toString()),
+					createdTime: stakeAccount.createdTime.toNumber(),
+					stakedAmount: BigNumber(stakeAccount.stakedAmount.toString()).div(UNITS_PER_STAKE_TOKEN).toFixed(),
+					rewardAmount: BigNumber(stakeAccount.rewardAmount.toString()).div(UNITS_PER_REWARD_TOKEN).toFixed(),
+					stakeClaimed: stakeAccount.stakeClaimed,
+					lockPeriod: stakeAccount.lockPeriod.toNumber(),
+					lockup: stakeAccount.lockup.toString(),
+					staker: stakeAccount.staker.toString(),
 				};
-			}),
-		);
 
-		await Promise.all(promises);
+				return info;
+			});
 
-		return stakesWithHash;
+			let stakesWithHash: StakeInfoWithHash[] = new Array(stakeAccountsInfo.length);
+
+			const { maxConcurrent = 3, minDelayMs = 400 } = options;
+			const queue = new RateLimitedQueue(maxConcurrent, minDelayMs); // Max 3 concurrent, 300ms between requests
+
+			const promises = stakeAccountsInfo.map((stakeInfo, index) =>
+				queue.add(async () => {
+					const signature = await this.getStakeSignatureForStake(stakeInfo);
+					stakesWithHash[index] = {
+						hash: signature ? signature : "",
+						...stakeInfo,
+					};
+				}),
+			);
+
+			await Promise.all(promises);
+
+			stakeWithHash2D.push(stakesWithHash);
+		}
+
+		return stakeWithHash2D.flat();
 	}
 
 	async getAllStakesCount(lockupAddress: Address) {
