@@ -228,10 +228,10 @@
   dependencies:
     bignumber.js "^9.3.0"
 
-"@zebec-network/solana-common@^1.5.0":
-  version "1.5.0"
-  resolved "https://registry.yarnpkg.com/@zebec-network/solana-common/-/solana-common-1.5.0.tgz#4ffe8e976a3228d413c4fb4676a57dbe303b39fe"
-  integrity sha512-Q/N2pJyMMRpxHKDowed2Q6sLM7yiZokZV3T+LyO4CH+61w9/jWWKHnYLdXsxCjjjBuPTY2O/O1I+aJnYmZSv0g==
+"@zebec-network/solana-common@1.5.1":
+  version "1.5.1"
+  resolved "https://registry.yarnpkg.com/@zebec-network/solana-common/-/solana-common-1.5.1.tgz#3a42b322ba4f94fdc72f5ce77afc5715b1396649"
+  integrity sha512-9nH5qVTzxX5GfvA8rd2XW0WCUSbpCoWjiUrFHSPvfslmo3sIHDAu8amYPmm6xVlmh+7318+1fHW1T/xr42H8AA==
   dependencies:
     "@coral-xyz/anchor" "0.31.1"
     bignumber.js "^9.3.0"

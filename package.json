@@ -28,7 +28,7 @@
     "@coral-xyz/anchor": "^0.31.1",
     "@solana/web3.js": "1.98.2",
     "@zebec-network/core-utils": "^1.0.4",
-    "@zebec-network/solana-common": "^1.5.0",
+    "@zebec-network/solana-common": "1.5.1",
     "bignumber.js": "^9.3.0",
     "buffer": "^6.0.3",
     "dotenv": "^16.5.0"
