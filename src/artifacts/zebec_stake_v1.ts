@@ -110,6 +110,11 @@ export type ZebecStake = {
 					signer: true;
 				},
 				{
+					name: "feePayer";
+					writable: true;
+					signer: true;
+				},
+				{
 					name: "lockup";
 					writable: true;
 					pda: {
@@ -391,6 +396,11 @@ export type ZebecStake = {
 			accounts: [
 				{
 					name: "staker";
+					writable: true;
+					signer: true;
+				},
+				{
+					name: "feePayer";
 					writable: true;
 					signer: true;
 				},

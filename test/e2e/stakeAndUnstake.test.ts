@@ -54,6 +54,8 @@ describe("Stake", () => {
 			console.log("Nonce:", nonce);
 
 			const payload = await service.stake({
+				feePayer: wallet.publicKey,
+				staker: wallet.publicKey,
 				amount,
 				lockPeriod,
 				nonce,
@@ -90,6 +92,8 @@ describe("Stake", () => {
 			await sleep(30000);
 
 			const payload = await service.unstake({
+				feePayer: wallet.publicKey,
+				staker: wallet.publicKey,
 				nonce,
 				lockupName,
 			});

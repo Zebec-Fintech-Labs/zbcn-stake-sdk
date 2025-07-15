@@ -104,6 +104,11 @@
 					"signer": true
 				},
 				{
+					"name": "fee_payer",
+					"writable": true,
+					"signer": true
+				},
+				{
 					"name": "lockup",
 					"writable": true,
 					"pda": {
@@ -265,6 +270,11 @@
 			"accounts": [
 				{
 					"name": "staker",
+					"writable": true,
+					"signer": true
+				},
+				{
+					"name": "fee_payer",
 					"writable": true,
 					"signer": true
 				},

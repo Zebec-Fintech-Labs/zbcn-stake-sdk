@@ -211,6 +211,7 @@ export class StakeService {
 	}
 
 	async getStakeInstruction(
+		feePayer: PublicKey,
 		lockup: PublicKey,
 		stakeToken: PublicKey,
 		stakeVault: PublicKey,
@@ -222,11 +223,21 @@ export class StakeService {
 	): Promise<TransactionInstruction> {
 		return this.program.methods
 			.stakeZbcn(data)
-			.accountsPartial({ stakeToken, staker, lockup, stakeVault, userNonce, stakePda, stakeVaultTokenAccount })
+			.accountsPartial({
+				stakeToken,
+				feePayer,
+				staker,
+				lockup,
+				stakeVault,
+				userNonce,
+				stakePda,
+				stakeVaultTokenAccount,
+			})
 			.instruction();
 	}
 
 	async getUnstakeInstruction(
+		feePayer: PublicKey,
 		feeVault: PublicKey,
 		lockup: PublicKey,
 		stakePda: PublicKey,
@@ -241,6 +252,7 @@ export class StakeService {
 		return this.program.methods
 			.unstakeZbcn(nonce)
 			.accountsPartial({
+				feePayer,
 				feeVault,
 				rewardToken,
 				stakeToken,
@@ -310,6 +322,7 @@ export class StakeService {
 
 	async stake(params: {
 		lockupName: string;
+		feePayer?: Address;
 		staker?: Address;
 		amount: Numeric;
 		lockPeriod: number;
@@ -320,6 +333,8 @@ export class StakeService {
 		if (!staker) {
 			throw new Error("MissingArgument: Please provide either staker address or publicKey in provider");
 		}
+
+		const feePayer = params.feePayer ? translateAddress(params.feePayer) : staker;
 
 		const lockup = deriveLockupAddress(params.lockupName, this.programId);
 
@@ -355,6 +370,7 @@ export class StakeService {
 		const UNITS_PER_STAKE_TOKEN = TEN_BIGNUM.pow(stakeTokenDecimals);
 
 		const instruction = await this.getStakeInstruction(
+			feePayer,
 			lockup,
 			stakeToken,
 			stakeVault,
@@ -372,12 +388,19 @@ export class StakeService {
 		return this._createPayload(staker, [instruction]);
 	}
 
-	async unstake(params: { lockupName: string; nonce: bigint; staker?: Address }): Promise<TransactionPayload> {
+	async unstake(params: {
+		lockupName: string;
+		nonce: bigint;
+		feePayer?: Address;
+		staker?: Address;
+	}): Promise<TransactionPayload> {
 		const staker = params.staker ? translateAddress(params.staker) : this.provider.publicKey;
 
 		if (!staker) {
 			throw new Error("MissingArgument: Please provide either staker address or publicKey in provider");
 		}
+
+		const feePayer = params.feePayer ? translateAddress(params.feePayer) : staker;
 
 		const lockup = deriveLockupAddress(params.lockupName, this.programId);
 
@@ -398,6 +421,7 @@ export class StakeService {
 		const stakerTokenAccount = getAssociatedTokenAddressSync(stakeToken, staker, true);
 
 		const instruction = await this.getUnstakeInstruction(
+			feePayer,
 			feeVault,
 			lockup,
 			stakePda,
