@@ -1,14 +1,7 @@
 import { BigNumber } from "bignumber.js";
-import dotenv from "dotenv";
 
 import { utils } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-
-dotenv.config();
-
-const SDK_ENV = process.env.SDK_ENV ?? "production";
-
-export const isSdkEnvDev = SDK_ENV === "development";
 
 /**
  * Zebec Card Program Ids
