@@ -228,10 +228,10 @@
   dependencies:
     bignumber.js "^9.3.0"
 
-"@zebec-network/solana-common@1.5.1":
-  version "1.5.1"
-  resolved "https://registry.yarnpkg.com/@zebec-network/solana-common/-/solana-common-1.5.1.tgz#3a42b322ba4f94fdc72f5ce77afc5715b1396649"
-  integrity sha512-9nH5qVTzxX5GfvA8rd2XW0WCUSbpCoWjiUrFHSPvfslmo3sIHDAu8amYPmm6xVlmh+7318+1fHW1T/xr42H8AA==
+"@zebec-network/solana-common@^1.6.0":
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/@zebec-network/solana-common/-/solana-common-1.6.0.tgz#592a084cd139cd46ba609abc93d56572cec4e59e"
+  integrity sha512-5ysBsu/4dsHD4nuAjTLCQfTzUuaDi1mYLHOLFcoheBvjBpagNwdVHwrRm8QlF83wOtfHWswBo++HCEP/WscmPA==
   dependencies:
     "@coral-xyz/anchor" "0.31.1"
     bignumber.js "^9.3.0"
@@ -466,10 +466,10 @@ diff@^7.0.0:
   resolved "https://registry.yarnpkg.com/diff/-/diff-7.0.0.tgz#3fb34d387cd76d803f6eebea67b921dab0182a9a"
   integrity sha512-PJWHUb1RFevKCwaFA9RlG5tCd+FO5iRh9A8HEtkmBH2Li03iJriB6m6JIN4rGz3K3JLawI7/veA1xzRKP6ISBw==
 
-dotenv@^16.5.0:
-  version "16.5.0"
-  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-16.5.0.tgz#092b49f25f808f020050051d1ff258e404c78692"
-  integrity sha512-m/C+AwOAr9/W1UOIZUo232ejMNnJAJtYQjUbHoNTBNTJSvqzzDh7vnrei3o3r3m9blf6ZoDkvcw0VmozNRFJxg==
+dotenv@^17.2.0:
+  version "17.2.0"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-17.2.0.tgz#e19678fdabcf86d4bfdb6764a758d7d44efbb6a2"
+  integrity sha512-Q4sgBT60gzd0BB0lSyYD3xM4YxrXA9y4uBDof1JNYGzOXrQdQ6yX+7XIAqoFOGQFOTK1D3Hts5OllpxMDZFONQ==
 
 eastasianwidth@^0.2.0:
   version "0.2.0"
