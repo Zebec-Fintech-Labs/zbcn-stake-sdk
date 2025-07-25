@@ -221,17 +221,17 @@
   dependencies:
     "@types/node" "*"
 
-"@zebec-network/core-utils@^1.0.4":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@zebec-network/core-utils/-/core-utils-1.0.4.tgz#e07562824eaaa8769e4a39a7130b65dd5f35f632"
-  integrity sha512-K5uwuyYbK2OYQMdRGn74U5Y6v1q1hSORwk90e1Yc6rzz1W+ciiCISPvnoOUaS0QfC/d86NAuhU837q4bE/NXEQ==
+"@zebec-network/core-utils@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@zebec-network/core-utils/-/core-utils-1.1.0.tgz#3cc92d6e7fdd5ef180a173ee14db0a7c39d1532a"
+  integrity sha512-OHiPlHuev8kuPxCj5feKCtB9knbSsWMTNMnT77MDhIj2snu3A0ayvfles73OOraEdKyVwxKaxiSZp1YS/Y+Ynw==
   dependencies:
     bignumber.js "^9.3.0"
 
-"@zebec-network/solana-common@^1.6.0":
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/@zebec-network/solana-common/-/solana-common-1.6.0.tgz#592a084cd139cd46ba609abc93d56572cec4e59e"
-  integrity sha512-5ysBsu/4dsHD4nuAjTLCQfTzUuaDi1mYLHOLFcoheBvjBpagNwdVHwrRm8QlF83wOtfHWswBo++HCEP/WscmPA==
+"@zebec-network/solana-common@^1.7.0":
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/@zebec-network/solana-common/-/solana-common-1.7.0.tgz#98b480c1687877570d8678209f1da167b0ae6609"
+  integrity sha512-HfSudKKQrYO1OUzQ2lWSnQB1aUo80UAG7B0GaO3fMkd36nFQcewNGysAxqG+XPMgSbh3ZkTCR3megDywWpH+Yg==
   dependencies:
     "@coral-xyz/anchor" "0.31.1"
     bignumber.js "^9.3.0"
