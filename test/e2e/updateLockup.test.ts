@@ -1,4 +1,5 @@
-import assert from 'assert';
+import assert from 'node:assert';
+import { describe, it } from "mocha";
 
 import {
 	createAnchorProvider,
@@ -72,7 +73,7 @@ describe("Update Lockup", () => {
 
 		it("update staking lock", async () => {
 			const fee = 0.00;
-			const feeVault = "2Nz9xczcGaWvu5pZNzzXundLEdP5tf2aCAoWy4CGrjxD";
+			const feeVault = "FLcSsn4xguvNYtnB7qSmh3yCPUcek6VBsfzWnhYSBAKT";
 			const rewardSchemes: RewardScheme[] = [
 				{
 					// duration: 2592000, // 30 days

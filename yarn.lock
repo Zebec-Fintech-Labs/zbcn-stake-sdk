@@ -331,20 +331,20 @@
   dependencies:
     "@types/node" "*"
 
-"@zebec-network/core-utils@^1.1.1":
-  version "1.1.1"
-  resolved "https://registry.npmjs.org/@zebec-network/core-utils/-/core-utils-1.1.1.tgz#fe3ee78e95da64c0f214f482b22fce9deb8a9205"
-  integrity sha512-jQ/664pLJq9V9+9HblB9v2/fg4Q1EpbwkhahdjZJfR9fz9s6lGXianKIJ4mEVhM0SQJw+Q3/ABBVlaBWcBlTKg==
+"@zebec-network/core-utils@^1.3.0":
+  version "1.3.0"
+  resolved "https://registry.npmjs.org/@zebec-network/core-utils/-/core-utils-1.3.0.tgz#2a2510d838e4bb4aefdbfca2928a9a0838aeea94"
+  integrity sha512-zmzZb5eIMC5vw/kcfNyG8jOhm5cyCr2sWDTdmeO99AlG5z7dddCYUvRuMpR3HuVB52k52E3aYJyIulVnv6qvJg==
   dependencies:
-    bignumber.js "^9.3.1"
+    bignumber.js "^11.1.1"
 
-"@zebec-network/solana-common@^2.3.1":
-  version "2.3.1"
-  resolved "https://registry.npmjs.org/@zebec-network/solana-common/-/solana-common-2.3.1.tgz#a2f65ca928f8fa437e31621ecb649c3ff736ed82"
-  integrity sha512-X4yRw46tcPytZS/v6dpC630yK1PTIiZIGCrEGOmz80tqAUPtqhQL3p94pjJnVhRScg3UmDHJMQMkqLacbfJq5w==
+"@zebec-network/solana-common@^2.6.0":
+  version "2.6.0"
+  resolved "https://registry.npmjs.org/@zebec-network/solana-common/-/solana-common-2.6.0.tgz#923531246b7f1f00419c6f0246a94912ae78b7a1"
+  integrity sha512-ezcREo6xl5IXmxPJ2/O9ytsxiWqKKcNmbLx67ZJo6RgryEdaT+Pnl5yh+uaYdkBbUKhy0pdytww1SQdNzmJ/vA==
   dependencies:
     "@coral-xyz/anchor" "^0.31.1"
-    bignumber.js "^9.3.1"
+    bignumber.js "^11.1.1"
 
 acorn-walk@^8.1.1:
   version "8.3.4"
@@ -420,6 +420,11 @@ bigint-buffer@^1.1.5:
   integrity sha512-trfYco6AoZ+rKhKnxA0hgX0HAbVP/s808/EuDSe2JDzUnCp/xAsli35Orvk67UrTEcwuxZqYZDmfA2RXJgxVvA==
   dependencies:
     bindings "^1.3.0"
+
+bignumber.js@^11.1.1:
+  version "11.1.1"
+  resolved "https://registry.npmjs.org/bignumber.js/-/bignumber.js-11.1.1.tgz#2313acf160b62b0cf1cafa621059bca789dfdf0e"
+  integrity sha512-LNkCYMieJqAts/Sj5094B92c5q+yRPlXWpABJnHMbUjB/F8AUjELmSmYX5mxbNiY/QnGnJvJIrnRuW5gUqbW5Q==
 
 bignumber.js@^9.0.1, bignumber.js@^9.3.1:
   version "9.3.1"
