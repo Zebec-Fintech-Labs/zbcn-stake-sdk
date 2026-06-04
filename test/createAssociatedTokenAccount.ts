@@ -11,8 +11,8 @@ const wallet = wallets[0];
 
 describe("create associated token account utility", () => {
 	it("creates associated token account", async () => {
-		const mint = new PublicKey("ZBCNpuD7YMXzTHB2fhGkGi78MNsHGLRXUhRewNRm9RU");
-		const owner = new PublicKey("67BvmUwjr9UtexrjMPzBjG6LEEmeHi7q4tZUSbw62Cjb");
+		const mint = new PublicKey("So11111111111111111111111111111111111111112");
+		const owner = new PublicKey("7sY7B38ToeHMeiewXFEHN7FNeibQ3J9D5HBDtqVPSggb");
 		const tokenAccount = await getOrCreateAssociatedTokenAccount(
 			connection,
 			wallet.payer,

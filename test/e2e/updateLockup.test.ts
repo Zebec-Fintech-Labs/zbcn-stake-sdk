@@ -1,4 +1,4 @@
-import assert from 'node:assert';
+import assert from "node:assert";
 import { describe, it } from "mocha";
 
 import {
@@ -6,11 +6,8 @@ import {
 	deriveLockupAddress,
 	type RewardScheme,
 	StakeServiceBuilder,
-} from '../../src';
-import {
-	getConnection,
-	getWallets,
-} from '../shared';
+} from "../../src";
+import { getConnection, getWallets } from "../shared";
 
 describe("Update Lockup", () => {
 	const network = "devnet";
@@ -72,7 +69,7 @@ describe("Update Lockup", () => {
 		// });
 
 		it("update staking lock", async () => {
-			const fee = 0.00;
+			const fee = 0.0;
 			const feeVault = "FLcSsn4xguvNYtnB7qSmh3yCPUcek6VBsfzWnhYSBAKT";
 			const rewardSchemes: RewardScheme[] = [
 				{
