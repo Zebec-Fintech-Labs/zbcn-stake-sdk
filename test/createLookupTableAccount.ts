@@ -1,7 +1,6 @@
-import { describe } from "mocha";
-
 import { web3 } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
+import { describe, it } from "mocha";
 
 import { getConnection, getWallets } from "./shared";
 

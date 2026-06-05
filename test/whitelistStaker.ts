@@ -7,8 +7,9 @@ import {
 	TransactionMessage,
 	VersionedTransaction,
 } from "@solana/web3.js";
-import { BigNumber } from "bignumber.js";
+import BigNumber from "bignumber.js";
 import { BN } from "bn.js";
+import { describe, it } from "mocha";
 
 import {
 	createAnchorProvider,

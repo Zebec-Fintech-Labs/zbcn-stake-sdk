@@ -1,5 +1,5 @@
 import assert from "assert";
-import { describe } from "mocha";
+import { describe, it } from "mocha";
 
 import { RateLimitedQueue } from "../../src";
 
@@ -30,23 +30,23 @@ async function measureExecutionTime<T>(
 	return { result, duration };
 }
 
-describe("RateLimitedQueue", function () {
-	describe("Constructor", function () {
-		it("should create queue with default parameters", function () {
+describe("RateLimitedQueue", () => {
+	describe("Constructor", () => {
+		it("should create queue with default parameters", () => {
 			const queue = new RateLimitedQueue();
 			assert.strictEqual(queue.getQueueLength(), 0);
 			assert.strictEqual(queue.getRunningCount(), 0);
 		});
 
-		it("should create queue with custom parameters", function () {
+		it("should create queue with custom parameters", () => {
 			const queue = new RateLimitedQueue(5, 500);
 			assert.strictEqual(queue.getQueueLength(), 0);
 			assert.strictEqual(queue.getRunningCount(), 0);
 		});
 	});
 
-	describe("Basic Functionality", function () {
-		it("should process single task successfully", async function () {
+	describe("Basic Functionality", () => {
+		it("should process single task successfully", async () => {
 			const queue = new RateLimitedQueue(1, 100);
 			const result = await queue.add(createMockTask(1, 50));
 
@@ -55,7 +55,7 @@ describe("RateLimitedQueue", function () {
 			assert.strictEqual(queue.getRunningCount(), 0);
 		});
 
-		it("should process multiple tasks successfully", async function () {
+		it("should process multiple tasks successfully", async () => {
 			const queue = new RateLimitedQueue(2, 100);
 			const tasks = [1, 2, 3, 4, 5].map((i) =>
 				queue.add(createMockTask(i, 100)),
@@ -75,8 +75,8 @@ describe("RateLimitedQueue", function () {
 		});
 	});
 
-	describe("Concurrency Control", function () {
-		it("should respect maximum concurrent limit", async function () {
+	describe("Concurrency Control", () => {
+		it("should respect maximum concurrent limit", async () => {
 			const maxConcurrent = 2;
 			const queue = new RateLimitedQueue(maxConcurrent, 50);
 			let currentConcurrent = 0;
@@ -115,7 +115,7 @@ describe("RateLimitedQueue", function () {
 			);
 		});
 
-		it("should queue tasks when at capacity", async function () {
+		it("should queue tasks when at capacity", async () => {
 			const queue = new RateLimitedQueue(1, 50); // Only 1 concurrent
 
 			// Add multiple tasks quickly
@@ -141,8 +141,8 @@ describe("RateLimitedQueue", function () {
 		});
 	});
 
-	describe("Rate Limiting", function () {
-		it("should enforce minimum delay between requests", async function () {
+	describe("Rate Limiting", () => {
+		it("should enforce minimum delay between requests", async () => {
 			const minDelay = 300;
 			const queue = new RateLimitedQueue(1, minDelay); // Single concurrent to ensure sequential
 			const timestamps: number[] = [];
@@ -166,7 +166,7 @@ describe("RateLimitedQueue", function () {
 			}
 		});
 
-		it("should not add unnecessary delay when tasks are naturally spaced", async function () {
+		it("should not add unnecessary delay when tasks are naturally spaced", async () => {
 			const minDelay = 200;
 			const queue = new RateLimitedQueue(1, minDelay);
 
@@ -192,8 +192,8 @@ describe("RateLimitedQueue", function () {
 		});
 	});
 
-	describe("Error Handling", function () {
-		it("should handle task failures without affecting other tasks", async function () {
+	describe("Error Handling", () => {
+		it("should handle task failures without affecting other tasks", async () => {
 			const queue = new RateLimitedQueue(2, 100);
 
 			const tasks = [
@@ -227,7 +227,7 @@ describe("RateLimitedQueue", function () {
 			assert.strictEqual(queue.getRunningCount(), 0);
 		});
 
-		it("should continue processing after errors", async function () {
+		it("should continue processing after errors", async () => {
 			const queue = new RateLimitedQueue(1, 100);
 
 			// First task fails
@@ -244,8 +244,8 @@ describe("RateLimitedQueue", function () {
 		});
 	});
 
-	describe("Performance", function () {
-		it("should be faster than sequential execution", async function () {
+	describe("Performance", () => {
+		it("should be faster than sequential execution", async () => {
 			const taskCount = 8;
 			const taskDuration = 100;
 
@@ -283,7 +283,7 @@ describe("RateLimitedQueue", function () {
 			);
 		});
 
-		it("should be slower than unlimited parallel execution", async function () {
+		it("should be slower than unlimited parallel execution", async () => {
 			const taskCount = 6;
 			const taskDuration = 100;
 
@@ -316,8 +316,8 @@ describe("RateLimitedQueue", function () {
 		});
 	});
 
-	describe("Queue State Management", function () {
-		it("should properly track queue and running counts", async function () {
+	describe("Queue State Management", () => {
+		it("should properly track queue and running counts", async () => {
 			const queue = new RateLimitedQueue(2, 100);
 
 			// Initial state
@@ -344,7 +344,7 @@ describe("RateLimitedQueue", function () {
 			assert.strictEqual(queue.getRunningCount(), 0);
 		});
 
-		it("should handle rapid task additions", async function () {
+		it("should handle rapid task additions", async () => {
 			const queue = new RateLimitedQueue(1, 50);
 			const taskCount = 10;
 

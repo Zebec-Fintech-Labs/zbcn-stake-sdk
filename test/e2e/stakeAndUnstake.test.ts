@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import { PublicKey } from "@solana/web3.js";
 import { getMintDecimals } from "@zebec-network/solana-common";
-import { BigNumber } from "bignumber.js";
+import BigNumber from "bignumber.js";
 
 import {
 	createAnchorProvider,

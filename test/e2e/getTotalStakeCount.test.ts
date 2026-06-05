@@ -1,3 +1,4 @@
+import { describe, it } from "mocha";
 import { createReadonlyProvider, StakeServiceBuilder } from "../../src";
 import { deriveLockupAddress } from "../../src/pda";
 import { getConnection, getWallets } from "../shared";
