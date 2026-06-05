@@ -24,7 +24,7 @@ import {
 	TransactionPayload,
 } from "@zebec-network/solana-common";
 import assert from "assert";
-import { BigNumber } from "bignumber.js";
+import BigNumber from "bignumber.js";
 
 import { ZEBEC_STAKE_IDL_V1, type ZebecStakeIdlV1 } from "./artifacts";
 import {
