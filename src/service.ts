@@ -23,7 +23,6 @@ import {
 	TEN_BIGNUM,
 	TransactionPayload,
 } from "@zebec-network/solana-common";
-import assert from "assert";
 import BigNumber from "bignumber.js";
 
 import { ZEBEC_STAKE_IDL_V1, type ZebecStakeIdlV1 } from "./artifacts";
@@ -794,13 +793,14 @@ export class StakeService {
 			);
 
 			const stakeAccountsInfo = accountInfos.map((value, i) => {
-				assert(
-					value,
-					"Account does not exists for stake address: " +
-						stakeAddresses[i] +
-						" at nonce: " +
-						nonces[i],
-				);
+				if (!value) {
+					throw new Error(
+						"Account does not exists for stake address: " +
+							stakeAddresses[i] +
+							" at nonce: " +
+							nonces[i],
+					);
+				}
 				const stakeAccount = this.program.coder.accounts.decode(
 					this.program.idl.accounts[2].name,
 					value.data,
