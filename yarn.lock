@@ -305,12 +305,12 @@
   resolved "https://registry.npmjs.org/@types/node/-/node-12.20.55.tgz#c329cbd434c42164f846b909bd6f85b5537f6240"
   integrity sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==
 
-"@types/node@^25.9.1":
-  version "25.9.1"
-  resolved "https://registry.npmjs.org/@types/node/-/node-25.9.1.tgz#3bda556db500ae4319c08e7fc9ab94f19013ba0b"
-  integrity sha512-xfrlY7UD5rMJk3ZVJP8BNzS28J36YJg+xp+LPXV1TdWxr8uMH5A860QNxYDGQe/ylDSgjxE52Q9VnO7p75tJxg==
+"@types/node@^26.0.0":
+  version "26.0.0"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-26.0.0.tgz#d4aece9e9412e9f2008d59bc2d74f5279316b665"
+  integrity sha512-vf2YFi1iY9lHGwNJMs01biZFbKJkrZR1T6/MlzjhJLPdntOHLhTrDSnSVcdtvjihi4VQNlrFRIxLsDBlQpAipA==
   dependencies:
-    undici-types ">=7.24.0 <7.24.7"
+    undici-types "~8.3.0"
 
 "@types/uuid@^8.3.4":
   version "8.3.4"
@@ -339,10 +339,10 @@
     "@noble/hashes" "^2.2.0"
     bignumber.js "^11.1.1"
 
-"@zebec-network/solana-common@^2.6.0":
-  version "2.6.0"
-  resolved "https://registry.npmjs.org/@zebec-network/solana-common/-/solana-common-2.6.0.tgz#923531246b7f1f00419c6f0246a94912ae78b7a1"
-  integrity sha512-ezcREo6xl5IXmxPJ2/O9ytsxiWqKKcNmbLx67ZJo6RgryEdaT+Pnl5yh+uaYdkBbUKhy0pdytww1SQdNzmJ/vA==
+"@zebec-network/solana-common@^2.6.1":
+  version "2.6.1"
+  resolved "https://registry.yarnpkg.com/@zebec-network/solana-common/-/solana-common-2.6.1.tgz#7e572182e26f9e3a8bd521ad18c631f9010521d1"
+  integrity sha512-FTZu5UFvNQ6Tf1l1uTcapAl2f3MhYxOarFNuAQYkwX+XdPQgDTbwk4cfGpTVaQPlfWnW7veH3JzL+D9NhaNdzA==
   dependencies:
     "@coral-xyz/anchor" "^0.31.1"
     bignumber.js "^11.1.1"
@@ -1184,15 +1184,15 @@ typescript@^6.0.3:
   resolved "https://registry.npmjs.org/typescript/-/typescript-6.0.3.tgz#90251dc007916e972786cb94d74d15b185577d21"
   integrity sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==
 
-"undici-types@>=7.24.0 <7.24.7":
-  version "7.24.6"
-  resolved "https://registry.npmjs.org/undici-types/-/undici-types-7.24.6.tgz#61275b485d7fd4e9d269c7cf04ec2873c9cc0f91"
-  integrity sha512-WRNW+sJgj5OBN4/0JpHFqtqzhpbnV0GuB+OozA9gCL7a993SmU+1JBZCzLNxYsbMfIeDL+lTsphD5jN5N+n0zg==
-
 undici-types@~7.16.0:
   version "7.16.0"
   resolved "https://registry.npmjs.org/undici-types/-/undici-types-7.16.0.tgz#ffccdff36aea4884cbfce9a750a0580224f58a46"
   integrity sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==
+
+undici-types@~8.3.0:
+  version "8.3.0"
+  resolved "https://registry.yarnpkg.com/undici-types/-/undici-types-8.3.0.tgz#44e9fc9f3244648cdea35e4f9bb2d681e9410809"
+  integrity sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ==
 
 utf-8-validate@^5.0.2:
   version "5.0.10"
