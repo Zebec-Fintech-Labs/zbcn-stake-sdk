@@ -1,0 +1,235 @@
+name: Notify Release
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Announces releases of this package to the shared Zebec Telegram channel — the
+# same bot/channel/message format used by program-registry, so all SDK releases
+# land in one centralized feed.
+#
+# Runs on every push to main and performs TWO checks:
+#
+#   1. package.json — what version does main claim?
+#   2. npm registry — what version is actually published?
+#
+# Then:
+#   • both agree and the version is newly published  → 🚀 rollout message
+#   • main has a version npm does not                → ⚠️ mismatch alert
+#     (version bump committed but never published)
+#   • npm has a version newer than main              → ⚠️ mismatch alert
+#     (published locally without committing the bump)
+#   • in sync, nothing new                           → no message
+#
+# Both message types are deduplicated with git tags, so pushing to main
+# repeatedly never re-sends the same notification:
+#
+#   release-notified/<version>            — rollout already announced
+#   release-mismatch/<main>--<npm>        — this exact mismatch already flagged
+#
+# Tags are used rather than a committed state file so branch protection on main
+# cannot block state updates, and they are written only AFTER Telegram accepts
+# the message, so a failed send is retried on the next push.
+#
+# On the very first run no tags exist: the current state is recorded silently
+# as a seed, so you do not get a burst of historical releases.
+#
+# Requires repo secrets:
+#   TELEGRAM_BOT_TOKEN  — token from @BotFather
+#   TELEGRAM_CHAT_ID    — target chat/channel/group id
+# ──────────────────────────────────────────────────────────────────────────────
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write # required to push the state tags
+
+concurrency:
+  group: notify-release
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    name: "Check package.json + npm registry · Notify Telegram"
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout (fetch-depth 0 brings the state tags with it) ────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ── 2. Compare package.json against the npm registry ─────────────────────
+      - name: Check version state
+        id: check
+        run: |
+          # ---- source 1: package.json ----------------------------------------
+          PACKAGE=$(jq -r '.name' package.json)
+          LOCAL=$(jq -r '.version' package.json)
+          if [ -z "$PACKAGE" ] || [ "$PACKAGE" = "null" ] || [ "$LOCAL" = "null" ]; then
+            echo "package.json has no name/version — nothing to do."
+            echo "action=none" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          echo "package.json : $PACKAGE@$LOCAL"
+
+          # ---- source 2: npm registry ----------------------------------------
+          ENCODED=$(printf '%s' "$PACKAGE" | sed 's|/|%2f|')
+          if ! curl -sSf --retry 3 --retry-delay 5 \
+                 "https://registry.npmjs.org/${ENCODED}" -o packument.json; then
+            echo "::error::Could not fetch $PACKAGE from the npm registry."
+            exit 1
+          fi
+
+          NPM_LATEST=$(jq -r '."dist-tags".latest // ""' packument.json)
+          LOCAL_ON_NPM=$(jq -r --arg v "$LOCAL" 'if .versions[$v] then "yes" else "no" end' packument.json)
+          echo "npm registry : latest=$NPM_LATEST  (main's $LOCAL published? $LOCAL_ON_NPM)"
+
+          # Version published immediately before LOCAL, for the "prev → new"
+          # line. Falls back to package.json's value at the previous commit,
+          # then to "new".
+          PREV=$(jq -r --arg v "$LOCAL" '
+            . as $p
+            | .time
+            | to_entries
+            | map(select(.key != "created" and .key != "modified"))
+            | map(select($p.versions[.key] != null))
+            | sort_by(.value)
+            | map(.key) as $ordered
+            | ($ordered | index($v)) as $i
+            | if $i == null or $i == 0 then "" else $ordered[$i - 1] end
+          ' packument.json)
+
+          if [ -z "$PREV" ]; then
+            PREV=$(git show "${{ github.event.before }}:package.json" 2>/dev/null | jq -r '.version // ""')
+          fi
+          if [ -z "$PREV" ] || [ "$PREV" = "null" ] || [ "$PREV" = "$LOCAL" ]; then PREV="new"; fi
+
+          echo "package=$PACKAGE"  >> $GITHUB_OUTPUT
+          echo "local=$LOCAL"      >> $GITHUB_OUTPUT
+          echo "npm=$NPM_LATEST"   >> $GITHUB_OUTPUT
+          echo "prev=$PREV"        >> $GITHUB_OUTPUT
+
+          HAS_STATE=$(git tag -l 'release-notified/*' 'release-mismatch/*' | head -1)
+
+          # ---- decide --------------------------------------------------------
+          if [ "$LOCAL" = "$NPM_LATEST" ]; then
+            # In sync. Announce once, when this version is first seen published.
+            if [ -z "$HAS_STATE" ]; then
+              echo "First run — seeding state at $LOCAL without announcing."
+              echo "action=seed" >> $GITHUB_OUTPUT
+            elif git rev-parse -q --verify "refs/tags/release-notified/$LOCAL" >/dev/null; then
+              echo "$LOCAL already announced — nothing to do."
+              echo "action=none" >> $GITHUB_OUTPUT
+            else
+              echo "New published release: $PREV → $LOCAL"
+              echo "action=rollout" >> $GITHUB_OUTPUT
+            fi
+            exit 0
+          fi
+
+          # ---- mismatch ------------------------------------------------------
+          if [ "$LOCAL_ON_NPM" = "no" ]; then
+            REASON="Version \`$LOCAL\` is committed to main but has not been published to npm."
+          else
+            REASON="npm has \`$NPM_LATEST\`, newer than main's \`$LOCAL\` — published without committing the version bump."
+          fi
+
+          MISMATCH_TAG="release-mismatch/${LOCAL}--${NPM_LATEST}"
+          if [ -z "$HAS_STATE" ]; then
+            echo "First run — seeding state without announcing (mismatch present)."
+            echo "action=seed" >> $GITHUB_OUTPUT
+          elif git rev-parse -q --verify "refs/tags/$MISMATCH_TAG" >/dev/null; then
+            echo "Mismatch $LOCAL vs $NPM_LATEST already reported — nothing to do."
+            echo "action=none" >> $GITHUB_OUTPUT
+          else
+            echo "::warning::Version mismatch — main: $LOCAL, npm: $NPM_LATEST"
+            echo "action=mismatch"       >> $GITHUB_OUTPUT
+            echo "reason=$REASON"        >> $GITHUB_OUTPUT
+            echo "mismatch_tag=$MISMATCH_TAG" >> $GITHUB_OUTPUT
+          fi
+
+      # ── 3. Seed state on first ever run (no message sent) ────────────────────
+      - name: Seed state
+        if: steps.check.outputs.action == 'seed'
+        run: |
+          TAG="release-notified/${{ steps.check.outputs.local }}"
+          git tag "$TAG" 2>/dev/null || true
+          git push origin "refs/tags/$TAG"
+          echo "Seeded state at $TAG — future changes will be announced."
+
+      # ── 4. Rollout notification (identical format to program-registry) ───────
+      - name: Notify Telegram — release
+        if: steps.check.outputs.action == 'rollout'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          PACKAGE='${{ steps.check.outputs.package }}'
+          VERSION='${{ steps.check.outputs.local }}'
+          PREV='${{ steps.check.outputs.prev }}'
+          REPO="${{ github.repository }}"
+          PROGRAM="${REPO#*/}"
+          SHA="${{ github.sha }}"
+          SHORT_SHA="${SHA:0:7}"
+          ACTOR="${{ github.actor }}"
+          COMMIT_URL="https://github.com/${REPO}/commit/${SHA}"
+          NPM_URL="https://www.npmjs.com/package/${PACKAGE}/v/${VERSION}"
+
+          TEXT=$(printf '🚀 *New Version Rollout*\n\n*Program:*  `%s`\n*Package:*  `%s`\n*Version:*  `%s` → `%s`\n*Released by:*  %s\n*Commit:*  [`%s`](%s)\n\n📦 [View on npm](%s)' \
+            "$PROGRAM" "$PACKAGE" "$PREV" "$VERSION" "$ACTOR" "$SHORT_SHA" "$COMMIT_URL" "$NPM_URL")
+
+          RESPONSE=$(curl -sS -X POST \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=${TEXT}" \
+            --data-urlencode "parse_mode=Markdown" \
+            --data-urlencode "disable_web_page_preview=true")
+
+          if [ "$(jq -r '.ok' <<< "$RESPONSE")" != "true" ]; then
+            echo "::error::Telegram rejected ${PACKAGE}@${VERSION}: $RESPONSE"
+            exit 1
+          fi
+          echo "✓ Announced ${PACKAGE}@${PREV} → ${VERSION}"
+
+          TAG="release-notified/${VERSION}"
+          git tag "$TAG" 2>/dev/null || true
+          git push origin "refs/tags/$TAG"
+
+      # ── 5. Mismatch alert (package.json and npm disagree) ────────────────────
+      - name: Notify Telegram — version mismatch
+        if: steps.check.outputs.action == 'mismatch'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          PACKAGE='${{ steps.check.outputs.package }}'
+          LOCAL='${{ steps.check.outputs.local }}'
+          NPM='${{ steps.check.outputs.npm }}'
+          REASON='${{ steps.check.outputs.reason }}'
+          REPO="${{ github.repository }}"
+          PROGRAM="${REPO#*/}"
+          SHA="${{ github.sha }}"
+          SHORT_SHA="${SHA:0:7}"
+          COMMIT_URL="https://github.com/${REPO}/commit/${SHA}"
+          NPM_URL="https://www.npmjs.com/package/${PACKAGE}"
+
+          TEXT=$(printf '⚠️ *Version Mismatch*\n\n*Program:*  `%s`\n*Package:*  `%s`\n*In main:*  `%s`\n*On npm:*  `%s`\n*Detail:*  %s\n*Commit:*  [`%s`](%s)\n\n📦 [View on npm](%s)' \
+            "$PROGRAM" "$PACKAGE" "$LOCAL" "$NPM" "$REASON" "$SHORT_SHA" "$COMMIT_URL" "$NPM_URL")
+
+          RESPONSE=$(curl -sS -X POST \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=${TEXT}" \
+            --data-urlencode "parse_mode=Markdown" \
+            --data-urlencode "disable_web_page_preview=true")
+
+          if [ "$(jq -r '.ok' <<< "$RESPONSE")" != "true" ]; then
+            echo "::error::Telegram rejected mismatch alert: $RESPONSE"
+            exit 1
+          fi
+          echo "✓ Reported mismatch — main: $LOCAL, npm: $NPM"
+
+          TAG='${{ steps.check.outputs.mismatch_tag }}'
+          git tag "$TAG" 2>/dev/null || true
+          git push origin "refs/tags/$TAG"
