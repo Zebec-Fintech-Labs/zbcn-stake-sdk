@@ -13,6 +13,7 @@ An SDK for interacting with the Zebec Network staking program on Solana. Support
   - [PDA Utilities](#pda-utilities)
   - [Types](#types)
   - [Constants](#constants)
+  - [RateLimitedQueue](#ratelimitedqueue)
 - [Usage Examples](#usage-examples)
   - [Read-only queries](#read-only-queries)
   - [Initialize a lockup pool](#initialize-a-lockup-pool)
@@ -268,6 +269,76 @@ Retrieves the on-chain transaction signature for a given stake position.
 service.getStakeSignatureForStake(stakeInfo: StakeInfo): Promise<string | null>
 ```
 
+#### Instruction Builders
+
+These methods return raw `TransactionInstruction` objects for advanced use cases where you need to compose transactions manually (e.g., bundling multiple instructions into a single transaction).
+
+#### `getInitLockupInstruction(creator, lockup, stakeToken, rewardToken, rewardVault, stakeVault, data)`
+
+Returns the instruction for initializing a lockup pool.
+
+```ts
+service.getInitLockupInstruction(
+  creator: PublicKey,
+  lockup: PublicKey,
+  stakeToken: PublicKey,
+  rewardToken: PublicKey,
+  rewardVault: PublicKey,
+  stakeVault: PublicKey,
+  data: InitLockupInstructionData
+): Promise<TransactionInstruction>
+```
+
+#### `getUpdateLockupInstruction(updater, lockup, data)`
+
+Returns the instruction for updating a lockup pool.
+
+```ts
+service.getUpdateLockupInstruction(
+  updater: PublicKey,
+  lockup: PublicKey,
+  data: UpdateLockupInstructionData
+): Promise<TransactionInstruction>
+```
+
+#### `getStakeInstruction(feePayer, lockup, stakeToken, stakeVault, staker, userNonce, stakePda, stakeVaultTokenAccount, data)`
+
+Returns the instruction for staking tokens.
+
+```ts
+service.getStakeInstruction(
+  feePayer: PublicKey,
+  lockup: PublicKey,
+  stakeToken: PublicKey,
+  stakeVault: PublicKey,
+  staker: PublicKey,
+  userNonce: PublicKey,
+  stakePda: PublicKey,
+  stakeVaultTokenAccount: PublicKey,
+  data: StakeInstructionData
+): Promise<TransactionInstruction>
+```
+
+#### `getUnstakeInstruction(feePayer, feeVault, lockup, stakePda, rewardToken, rewardVault, stakeToken, stakeVault, staker, stakerTokenAccount, nonce)`
+
+Returns the instruction for unstaking tokens.
+
+```ts
+service.getUnstakeInstruction(
+  feePayer: PublicKey,
+  feeVault: PublicKey,
+  lockup: PublicKey,
+  stakePda: PublicKey,
+  rewardToken: PublicKey,
+  rewardVault: PublicKey,
+  stakeToken: PublicKey,
+  stakeVault: PublicKey,
+  staker: PublicKey,
+  stakerTokenAccount: PublicKey,
+  nonce: BN
+): Promise<TransactionInstruction>
+```
+
 #### Properties
 
 | Property | Type | Description |
@@ -352,6 +423,12 @@ type RewardScheme = {
   rewardRate: Numeric;    // Annual reward rate as a percentage (e.g., "5.00" = 5%)
 };
 
+// On-chain representation of a reward scheme (used with instruction builders)
+type ParsedRewardScheme = {
+  duration: BN;           // Lock period as a BN
+  reward: BN;             // Reward rate in basis points
+};
+
 // Returned by getLockupInfo()
 type LockupInfo = {
   address: string;
@@ -400,6 +477,30 @@ type UserNonceInfo = {
 
 // Accepted wherever amounts are passed
 type Numeric = string | number;
+
+// Data for getInitLockupInstruction()
+type InitLockupInstructionData = {
+  rewardSchemes: ParsedRewardScheme[];
+  fee: BN;
+  feeVault: PublicKey;
+  name: string;
+  minimumStake: BN;
+};
+
+// Data for getUpdateLockupInstruction()
+type UpdateLockupInstructionData = {
+  rewardSchemes: ParsedRewardScheme[];
+  fee: BN;
+  feeVault: PublicKey;
+  minimumStake: BN;
+};
+
+// Data for getStakeInstruction()
+type StakeInstructionData = {
+  amount: BN;
+  lockPeriod: BN;
+  nonce: BN;
+};
 ```
 
 ---
@@ -417,6 +518,28 @@ ZEBEC_STAKE_PROGRAM.devnet   // "zSTKzGLiN6T6EVzhBiL6sjULXMahDavAS2p4R62afGv"
 STAKE_LOOKUP_TABLE_ADDRESS["mainnet-beta"]  // "EoKjJejKr4XsBdtUuYwzZcYd6tpGNijxCGgQocxtxQ8t"
 STAKE_LOOKUP_TABLE_ADDRESS["devnet"]        // "C4R2sL6yj7bzKfbdfwCfH68DZZ3QnzdmedE9wQqTfAAA"
 ```
+
+---
+
+### RateLimitedQueue
+
+A utility class for rate-limiting concurrent async operations. Used internally by `getAllStakesInfoOfUser` but also exported for advanced use cases.
+
+```ts
+import { RateLimitedQueue } from "@zebec-network/zebec-stake-sdk";
+
+const queue = new RateLimitedQueue(maxConcurrent = 3, minDelayMs = 200);
+
+const result = await queue.add(async () => {
+  // Your async operation
+  return await fetchSomething();
+});
+```
+
+| Parameter | Default | Description |
+| --------- | ------- | ----------- |
+| `maxConcurrent` | `3` | Maximum number of concurrent operations |
+| `minDelayMs` | `200` | Minimum delay in milliseconds between requests |
 
 ---
 
